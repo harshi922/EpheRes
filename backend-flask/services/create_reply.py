@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-
 class CreateReply:
   def run(message, user_handle, activity_uuid):
     model = {
@@ -23,7 +22,7 @@ class CreateReply:
       # return what we provided
       model['data'] = {
         'display_name': 'Andrew Brown',
-        'handle':  user_handle,
+        'handle':  user_sender_handle,
         'message': message,
         'reply_to_activity_uuid': activity_uuid
       }
