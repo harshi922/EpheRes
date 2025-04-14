@@ -1,5 +1,11 @@
+'use client';
+
+import { fetchAuthSession, getCurrentUser
+} from 'aws-amplify/auth';
+
 import './HomeFeedPage.css';
 import React from "react";
+import { useEffect, useState } from 'react';
 
 import DesktopNavigation  from '../components/DesktopNavigation';
 import DesktopSidebar     from '../components/DesktopSidebar';
@@ -10,6 +16,8 @@ import ReplyForm from '../components/ReplyForm';
 // [TODO] Authenication
 import Cookies from 'js-cookie'
 
+
+
 export default function HomeFeedPage() {
   const [activities, setActivities] = React.useState([]);
   const [popped, setPopped] = React.useState(false);
@@ -17,6 +25,8 @@ export default function HomeFeedPage() {
   const [replyActivity, setReplyActivity] = React.useState({});
   const [user, setUser] = React.useState(null);
   const dataFetchedRef = React.useRef(false);
+  const [session, setSession] = useState();
+
 
   const loadData = async () => {
     try {
@@ -35,16 +45,16 @@ export default function HomeFeedPage() {
     }
   };
 
-  const checkAuth = async () => {
-    console.log('checkAuth')
-    // [TODO] Authenication
-    if (Cookies.get('user.logged_in')) {
-      setUser({
-        display_name: Cookies.get('user.name'),
-        handle: Cookies.get('user.username')
-      })
-    }
-  };
+// check if we are authenticated
+const checkAuth = async () => {
+  try {
+    const currentSession = await fetchAuthSession();
+    setSession(currentSession);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 
   React.useEffect(()=>{
     //prevents double call
