@@ -7,11 +7,11 @@ services:
       OTEL_SERVICE_NAME: 'backend-flask'
       OTEL_EXPORTER_OTLP_ENDPOINT: "https://api.honeycomb.io"
       OTEL_EXPORTER_OTLP_HEADERS: "x-honeycomb-team=${HONEYCOMB_API_KEY}"
-    build: ./backend-flask
+    build: ./backend-fastapi
     ports:
       - "4567:4567"
     volumes:
-      - ./backend-flask:/backend-flask
+      - ./backend-fastapi:/backend-fastapi
   frontend-react-js:
     environment:
       REACT_APP_BACKEND_URL: "https://4567-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}"

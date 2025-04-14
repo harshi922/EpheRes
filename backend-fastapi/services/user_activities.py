@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+
 class UserActivities:
   def run(user_handle):
     model = {
@@ -20,4 +21,5 @@ class UserActivities:
         'expires_at': (now + timedelta(days=31)).isoformat()
       }]
       model['data'] = results
+    
     return model

@@ -1,0 +1,16 @@
+
+fastapi>=0.104.0
+uvicorn>=0.23.2
+python-dotenv>=1.0.0
+pydantic>=2.4.2
+pydantic-settings>=2.0.3
+sqlalchemy>=2.0.22
+psycopg2-binary>=2.9.9
+boto3>=1.28.64
+
+# OpenTelemetry for instrumentation and tracing
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-http
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-requests
