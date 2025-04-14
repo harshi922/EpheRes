@@ -2,7 +2,7 @@ import './SigninPage.css';
 import React from "react";
 import {ReactComponent as Logo} from '../components/svg/logo.svg';
 import { Link } from "react-router-dom";
-import { signIn } from 'aws-amplify/auth';
+import { signIn,fetchAuthSession  } from 'aws-amplify/auth';
 
 // [TODO] Authenication
 import Cookies from 'js-cookie'
@@ -12,31 +12,53 @@ export default function SigninPage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [errors, setErrors] = React.useState('');
-  // const [cognitoErrors, setCognitoErrors] = React.useState('');
 
   const onsubmit = async (event) => {
-    setErrors('')
+    setErrors('');
     event.preventDefault();
+    
     try {
-        signIn(email, password)
-        .then(user => {
-          localStorage.setItem("access_token", user.signInUserSession.accessToken.jwtToken)
-          window.location.href = "/"
-        })
-        .catch(err => { console.log('Error!', err) });
-    } catch (error) {
-      if (error.code == 'UserNotConfirmedException') {
-        window.location.href = "/confirm"
+      // Updated signIn format for Amplify v6
+      const { isSignedIn, nextStep } = await signIn({
+        username: email,
+        password: password
+      });
+      
+      // if (isSignedIn) {
+      //   // Get the user session to access tokens
+      //   const { tokens } = await fetchAuthSession();
+      //   console.log(tokens)
+      //   const accessToken = tokens.accessToken.toString();
+      //   console.log("Token received:", accessToken.substring(0, 10) + "..."); // Log first few characters
+      //   localStorage.setItem("access_token", accessToken);
+      //   console.log("Token stored, now redirecting...");
+      //   window.location.href = "/";
+      //   console.log("Redirect attempted"); // This might not execute if redirect works
+      //         localStorage.setItem("access_token", tokens.accessToken.toString());
+      //   // window.location.href = "/";
+      //   window.location.replace("/")
+      //   console.log(window.location.href)
+      // }
+      if (isSignedIn) {
+        const { tokens } = await fetchAuthSession();
+        localStorage.setItem("access_token", tokens.accessToken.toString());
+        
+        try {
+          window.location.href = "/";
+        } catch (error) {
+          console.error("Navigation error:", error);
+          setErrors("Failed to load home page. Please check console for details.");
+        }
       }
-      setErrors(error.message)
+    } catch (error) {
+      if (error.code === 'UserNotConfirmedException') {
+        window.location.href = "/confirm";
+      }
+      setErrors(error.message || 'An error occurred during sign in');
     }
-    return false
+    
+    return false;
   }
-  
-  // let errors;
-  // if (cognitoErrors){
-  //   errors = <div className='errors'>{cognitoErrors}</div>;
-  // }
   
 
   const email_onchange = (event) => {
@@ -50,9 +72,6 @@ export default function SigninPage() {
   if (errors){
     el_errors = <div className='errors'>{errors}</div>;
   }
-React.useEffect(()=>{
-  onsubmit();
-  }, [])
 
   return (
     <article className="signin-article">
