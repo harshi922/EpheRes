@@ -78,12 +78,14 @@ origins = [frontend, backend]
 #   expose_headers='Authorization',
 #   methods="OPTIONS,GET,HEAD,POST"
 # )
+# Single, clear CORS configuration
 cors = CORS(
     app, 
     resources={r"/api/*": {"origins": origins}},
-    expose_headers="location,link,Authorization",
-    allow_headers="content-type,if-modified-since,Authorization",
-    methods="OPTIONS,GET,HEAD,POST"
+    supports_credentials=True,
+    expose_headers=["Content-Type", "Authorization", "location", "link"],
+    allow_headers=["Content-Type", "Authorization", "if-modified-since"],
+    methods=["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE"]
 )
 # @app.after_request
 # def after_request(response):

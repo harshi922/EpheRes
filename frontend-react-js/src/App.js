@@ -33,11 +33,6 @@ import {
 //     userPoolWebClientId: process.env.REACT_APP_AWS_USER_POOLS_WEB_CLIENT_ID,   // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
 //   }
 // });
-console.log("ENV VARS:", {
-  region: process.env.REACT_APP_AWS_PROJECT_REGION,
-  userPoolId: process.env.REACT_APP_AWS_USER_POOLS_ID,
-  clientId: process.env.REACT_APP_CLIENT_ID
-});
 Amplify.configure({
   Auth: {
     Cognito: {
@@ -60,7 +55,6 @@ Amplify.configure({
 });
 
 const currentConfig = Amplify.getConfig();
-console.log(currentConfig)
 const router = createBrowserRouter([
   {
     path: "/",
