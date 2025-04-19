@@ -1,4 +1,4 @@
-form.message_form {
+/* form.message_form {
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -53,4 +53,4 @@ form.message_form .count {
 
 form.message_form .count.err {
   color: rgb(255, 0, 0)
-}
+} */

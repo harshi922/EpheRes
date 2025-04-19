@@ -1,4 +1,4 @@
-section.message_groups {
+/* section.message_groups {
   background: #000;
   border-right: solid 1px rgb(58,63,78);
   padding: 0px;
@@ -25,4 +25,4 @@ section.message_groups {
 .message_group_feed_collection {
   flex-grow: 1;
   overflow: auto;
-}
+} */

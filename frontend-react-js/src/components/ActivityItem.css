@@ -1,4 +1,4 @@
-.activity_item {
+/* .activity_item {
   display: flex;
   flex-direction: column;
   border-bottom: solid 1px rgb(31,36,49);
@@ -43,4 +43,4 @@
 
 .activity_item .activity_actions .action:hover .icon {
   fill: rgb(149,0,255);
-}
+} */
