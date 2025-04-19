@@ -1,9 +1,0 @@
-greatdbpass123!
-
-export CONNECTION_URL="postgres://postgres:password@localhost:5432/splitme"
-
-gp env CONNECTION_URL="postgres://postgres:password@localhost:5432/splitme"
-
-export PRODUCTION_CONNECTION_URL="postgres://root:greatdbpass123%21@splitme-db-instance.cqxuegysqmtv.us-east-1.rds.amazonaws.com:5432/splitme"
-
-gp env PRODUCTION_CONNECTION_URL="postgres://root:greatdbpass123%21@splitme-db-instance.cqxuegysqmtv.us-east-1.rds.amazonaws.com:5432/splitme"
