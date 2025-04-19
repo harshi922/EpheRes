@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import request
+from flask import request, session
 from flask_cors import CORS, cross_origin
 import os
 
@@ -13,6 +13,7 @@ from services.message_groups import *
 from services.messages import *
 from services.create_message import *
 from services.show_activity import *
+from lib.cognito_verification_token import CognitoTokenService, extract_access_token, TokenVerifyError   
 
 # honeycomb stuff
 from opentelemetry import trace
@@ -23,12 +24,12 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 
-
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 
 import watchtower
 import logging
+import sys
 from time import strftime
 
 # # Configuring Logger to Use CloudWatch
@@ -52,6 +53,18 @@ trace.set_tracer_provider(provider)
 tracer = trace.get_tracer(__name__)
 
 app = Flask(__name__)
+
+cognito_verification = CognitoTokenService(
+  user_pool_id=os.getenv("AWS_COGNITO_USER_POOL_ID"), 
+  user_pool_client_id=os.getenv("AWS_COGNITO_USER_POOL_CLIENT_ID"), 
+  region=os.getenv("AWS_DEFAULT_REGION")
+)
+
+
+app.config['AWS_COGNITO_USER_POOL_ID'] = os.getenv("AWS_COGNITO_USER_POOL_ID")
+app.config['AWS_COGNITO_APP_CLIENT_ID'] = os.getenv("AWS_COGNITO_USER_POOL_CLIENT_ID")
+app.config['AWS_REGION'] = os.getenv("AWS_DEFAULT_REGION")
+
 # honeycomb stuff
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
@@ -64,21 +77,7 @@ frontend = os.getenv('FRONTEND_URL')
 backend = os.getenv('BACKEND_URL')
 
 origins = [frontend, backend]
-# cors = CORS(
-#   app, 
-#   resources={r"/api/*": {"origins": origins}},
-#   expose_headers="location,link",
-#   allow_headers="content-type,if-modified-since",
-#   methods="OPTIONS,GET,HEAD,POST"
-# )
-# cors = CORS(
-#   app, 
-#   resources={r"/api/*": {"origins": origins}},
-#   headers=['Content-Type', 'Authorization'], 
-#   expose_headers='Authorization',
-#   methods="OPTIONS,GET,HEAD,POST"
-# )
-# Single, clear CORS configuration
+
 cors = CORS(
     app, 
     resources={r"/api/*": {"origins": origins}},
@@ -130,13 +129,25 @@ def data_create_message():
 
 @app.route("/api/activities/home", methods=['GET'])
 def data_home():
-  data = HomeActivities.run(logger=LOGGER)
+  app.logger.debug(request.headers)
+  access_token = extract_access_token(request.headers)
+  try:
+      claims = cognito_verification.verify(access_token)
+      app.logger.debug("authenticated")
+      app.logger.debug(claims)
+      data = HomeActivities.run(cognito_user_id=claims['username'])
+
+  except TokenVerifyError as e:
+      app.logger.debug(e)
+      app.logger.debug("unauthenticated")
+      data = HomeActivities.run()
+
+      # _ = request.data
+      # abort(make_response(jsonify(message=str(e)), 401))
+
+
   return data, 200
 
-@app.route("/api/activities/notifications", methods=['GET'])
-def data_notifications():
-  data = NotificationsActivities.run()
-  return data, 200
 
 
 @app.route("/api/activities/@<string:handle>", methods=['GET'])

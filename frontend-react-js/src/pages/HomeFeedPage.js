@@ -27,13 +27,12 @@ export default function HomeFeedPage() {
       const session = await fetchAuthSession();
       console.log("Auth session fetched successfully:", session);
       setSession(session);
-      
-      // Store the access token in localStorage for API calls
+            
+      // Change this in your checkAuth function
       if (session && session.tokens && session.tokens.accessToken) {
         localStorage.setItem("access_token", session.tokens.accessToken.toString());
-        console.log("Access token stored in localStorage");
+        console.log("ID token stored in localStorage");
       }
-      
       console.log("Attempting to get current user");
       const currentUser = await getCurrentUser();
       console.log("Current user retrieved:", currentUser);
@@ -64,7 +63,7 @@ export default function HomeFeedPage() {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+          // 'Content-Type': 'application/json'
         }
       });
       

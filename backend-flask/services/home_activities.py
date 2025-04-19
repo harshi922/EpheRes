@@ -4,12 +4,19 @@ from opentelemetry import trace
 tracer = trace.get_tracer("home.activities")
 
 class HomeActivities:
-  def run(logger):
-    # logger.info('Hello Cloudwatch! from  /api/activities/home')
-    with tracer.start_as_current_span("home-activities-trace"):
-      span = trace.get_current_span()
-      now = datetime.now(timezone.utc).astimezone()
-      results = [{
+  def run(cognito_user_id=None):
+    # Start with tracing (commented out but kept for reference)
+    # with tracer.start_as_current_span("home-activities-trace"):
+    #   span = trace.get_current_span()
+    
+    now = datetime.now(timezone.utc).astimezone()
+    
+    # Log authenticated user if available (useful for debugging)
+    # if cognito_user_id:
+      # You could log this for debugging
+      # print(f"Authenticated user: {cognito_user_id}")
+    
+    results = [{
         'uuid': '68f126b0-1ceb-4a33-88be-d90fa7109eee',
         'handle':  'Andrew Brown',
         'message': 'Cloud is fun!',
@@ -35,7 +42,9 @@ class HomeActivities:
         'message': 'I am out of prune juice',
         'created_at': (now - timedelta(days=7)).isoformat(),
         'expires_at': (now + timedelta(days=9)).isoformat(),
-        'likes': 0,
+        'likes_count': 0,  # Changed from 'likes' to 'likes_count' for consistency
+        'replies_count': 0,  # Added missing field
+        'reposts_count': 0,  # Added missing field
         'replies': []
       },
       {
@@ -44,8 +53,27 @@ class HomeActivities:
         'message': 'My dear doctor, I am just simple tailor',
         'created_at': (now - timedelta(hours=1)).isoformat(),
         'expires_at': (now + timedelta(hours=12)).isoformat(),
-        'likes': 0,
+        'likes_count': 0,  # Changed from 'likes' to 'likes_count' for consistency
+        'replies_count': 0,  # Added missing field
+        'reposts_count': 0,  # Added missing field
         'replies': []
       }
-      ]
-      return results
+    ]
+
+    if cognito_user_id != None:
+       extra = {
+        'uuid': '2sd59df-3079-4947-b847-9e0892d1bab4',
+        'handle':  'Garek',
+        'message': 'Auth wala',
+        'created_at': (now - timedelta(hours=1)).isoformat(),
+        'expires_at': (now + timedelta(hours=12)).isoformat(),
+        'likes_count': 0,  # Changed from 'likes' to 'likes_count' for consistency
+        'replies_count': 0,  # Added missing field
+        'reposts_count': 0,  # Added missing field
+        'replies': []
+      }
+    results.insert(0, extra)
+     
+
+    
+    return results
