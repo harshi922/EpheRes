@@ -1,0 +1,23 @@
+.expense_feed {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    margin-bottom: 20px;
+  }
+  
+  .expense_feed_heading {
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .expense_feed_heading .title {
+    font-weight: 600;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .expense_feed_collection {
+    max-height: 600px;
+    overflow-y: auto;
+  }

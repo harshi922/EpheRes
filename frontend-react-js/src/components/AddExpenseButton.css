@@ -1,0 +1,19 @@
+.add_expense_button {
+    background-color: #5cc689;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px 0;
+    width: 100%;
+  }
+  
+  .add_expense_button:hover {
+    background-color: #4ba975;
+  }

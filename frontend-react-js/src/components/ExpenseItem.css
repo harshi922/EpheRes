@@ -1,0 +1,75 @@
+.expense_item {
+    display: flex;
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .expense_avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #5cc689;
+    margin-right: 16px;
+    flex-shrink: 0;
+  }
+  
+  .expense_content {
+    flex: 1;
+  }
+  
+  .expense_meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .expense_identity .display_name {
+    font-weight: 600;
+  }
+  
+  .expense_identity .handle {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .expense_time {
+    color: #888;
+    font-size: 14px;
+  }
+  
+  .description {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .group {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  
+  .group .label {
+    font-weight: 500;
+  }
+  
+  .splits {
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 8px;
+  }
+  
+  .participant {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 14px;
+  }
+  
+  .participant .name {
+    color: #555;
+  }
+  
+  .participant .amount {
+    font-weight: 500;
+  }

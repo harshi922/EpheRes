@@ -1,0 +1,85 @@
+.friends_content {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .friends_list {
+    width: 300px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  
+  .friends_list h2 {
+    padding: 16px;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .friend_item {
+    display: flex;
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .friend_item.selected {
+    background-color: #f5f5f5;
+  }
+  
+  .friend_avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  
+  .friend_info {
+    flex: 1;
+  }
+  
+  .friend_name {
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  
+  .pay_button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background-color: #5cc689;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  .friend_item:hover .pay_button {
+    opacity: 1;
+  }
+  
+  .friend_expenses {
+    flex: 1;
+  }
+  
+  .select_friend_prompt {
+    display: flex;
+    height: 200px;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 8px;
+    color: #666;
+    font-size: 16px;
+  }

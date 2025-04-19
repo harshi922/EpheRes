@@ -1,0 +1,88 @@
+.account_container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .account_header {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+  
+  .user_avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #5cc689;
+    margin-right: 24px;
+    flex-shrink: 0;
+  }
+  
+  .user_info h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  .user_info p {
+    margin: 4px 0;
+    color: #666;
+  }
+  
+  .account_sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .expense_statistics, .account_settings {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+  
+  .expense_statistics h3, .account_settings h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #333;
+    font-size: 18px;
+  }
+  
+  .settings_option {
+    margin-bottom: 16px;
+  }
+  
+  .settings_option label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .settings_option select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .sign_out_button {
+    background-color: #f1f1f1;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+  
+  .sign_out_button:hover {
+    background-color: #e0e0e0;
+  }

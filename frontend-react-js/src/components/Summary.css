@@ -1,0 +1,49 @@
+.summary_card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    margin-bottom: 20px;
+  }
+  
+  .summary_card h2 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #333;
+  }
+  
+  .balance_overview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .balance_item, .net_balance {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .net_balance {
+    margin-top: 8px;
+    border-bottom: none;
+    font-weight: 600;
+  }
+  
+  .label {
+    color: #666;
+  }
+  
+  .amount {
+    font-weight: 500;
+  }
+  
+  .amount.positive {
+    color: #5cc689;
+  }
+  
+  .amount.negative {
+    color: #e0695e;
+  }
