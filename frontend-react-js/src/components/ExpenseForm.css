@@ -1,58 +1,58 @@
 .expense_form {
-    padding: 16px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    max-width: 500px;
-    margin: 0 auto;
-  }
-  
-  .expense_form .field {
-    margin-bottom: 16px;
-  }
-  
-  .expense_form label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #333;
-  }
-  
-  .expense_form input, 
-  .expense_form select, 
-  .expense_form textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-  
-  .expense_form .submit {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-  
-  .expense_form button {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 4px;
-    font-weight: 600;
-  }
-  
-  .expense_form button[type='submit'] {
-    background-color: #5cc689;
-    color: white;
-  }
-  
-  .expense_form button[type='button'] {
-    background-color: #f1f1f1;
-    color: #333;
-  }
-  
-  .expense_form .errors {
-    color: #e0695e;
-    margin-top: 16px;
-    font-size: 14px;
-  }
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.expense_form .field {
+  margin-bottom: 16px;
+}
+
+.expense_form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.expense_form input, 
+.expense_form select, 
+.expense_form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.expense_form .submit {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.expense_form button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.expense_form button[type='submit'] {
+  background-color: #5cc689;
+  color: white;
+}
+
+.expense_form button[type='button'] {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.expense_form .errors {
+  color: #e0695e;
+  margin-top: 16px;
+  font-size: 14px;
+}
