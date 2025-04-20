@@ -225,17 +225,51 @@
 // export default App;
 
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import ExpenseFeed from './components/ExpenseFeed';
 import NavigationBar from './components/NavigationBar';
 import FriendsPage from './pages/FriendsPage';
 import GroupsPage from './pages/GroupsPage';
+import GroupPage from './pages/GroupPage';
+import ActivityPage from './pages/ActivityPage';
+import AccountPage from './pages/AccountPage';
+import SignupPage from './pages/SignupPage';
+import SigninPage from './pages/SigninPage';
+import RecoverPage from './pages/RecoverPage';
+import ConfirmationPage from './pages/ConfirmationPage';
 import ExpenseForm from './components/ExpenseForm';
 import { HomepageBalanceCard } from './components/BalanceCard';
 
+const HomePage = ({ expenses, user, totalOwed, totalOwe, setShowExpenseForm }) => {
+  return (
+    <div className="pb-16">
+      <div className="p-4">
+        <HomepageBalanceCard totalOwed={totalOwed} totalOwe={totalOwe} />
+      </div>
+      <ExpenseFeed 
+        expenses={expenses} 
+        currentUser={user} 
+        onAddExpense={() => setShowExpenseForm(true)} 
+      />
+    </div>
+  );
+};
+
+const ActivityPageWrapper = ({ expenses, user }) => {
+  return (
+    <div className="pb-16">
+      <ExpenseFeed 
+        title="Recent Activity"
+        expenses={expenses} 
+        currentUser={user} 
+      />
+    </div>
+  );
+};
+
 const App = () => {
-  // State for page navigation and modals
-  const [activePage, setActivePage] = useState('home');
+  // State for modals
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -323,11 +357,6 @@ const App = () => {
     checkAuth();
   }, []);
   
-  // Handle navigation changes
-  const handleNavigate = (pageId) => {
-    setActivePage(pageId);
-  };
-  
   // Handle adding a new expense
   const handleAddExpense = (expenseData) => {
     const newExpense = {
@@ -340,99 +369,84 @@ const App = () => {
     setShowExpenseForm(false);
   };
   
-  // Calculate which component to render based on active page
-  const renderActivePage = () => {
-    if (!isAuthChecked) {
-      return (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
+  // Loading screen
+  if (!isAuthChecked) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
-      );
-    }
-    
-    switch (activePage) {
-      case 'home':
-        return (
-          <div className="pb-16">
-            <div className="p-4">
-              <HomepageBalanceCard totalOwed={totalOwed} totalOwe={totalOwe} />
-            </div>
-            <ExpenseFeed 
-              expenses={expenses} 
-              currentUser={user} 
-              onAddExpense={() => setShowExpenseForm(true)} 
-            />
-          </div>
-        );
-      case 'friends':
-        return <FriendsPage />;
-      case 'groups':
-        return <GroupsPage />;
-      case 'activity':
-        return (
-          <div className="pb-16">
-            <ExpenseFeed 
-              title="Recent Activity"
-              expenses={expenses} 
-              currentUser={user} 
-            />
-          </div>
-        );
-      default:
-        return <div>Page not found</div>;
-    }
-  };
+      </div>
+    );
+  }
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      {renderActivePage()}
-      
-      {/* Navigation Bar */}
-      <NavigationBar 
-        activePage={activePage} 
-        onNavigate={handleNavigate} 
-        onAddExpenseClick={() => setShowExpenseForm(true)} 
-      />
-      
-      {/* Expense Form Modal */}
-      {showExpenseForm && (
-        <div className="fixed inset-0 z-50">
-          <ExpenseForm 
-            onSubmit={handleAddExpense} 
-            onCancel={() => setShowExpenseForm(false)} 
-            currentUser={user}
-            friendsList={[
-              { id: 'naveen', name: 'Naveen Vanapalli', balance: '-42.75' },
-              { id: 'harshitaa', name: 'Harshitaa Yarramsetti', balance: '128.50' }
-            ]}
-            groupsList={[
-              { 
-                id: 1, 
-                name: 'Roommates',
-                members: [
-                  { id: 'you', name: 'You' },
-                  { id: 'naveen', name: 'Naveen Vanapalli' },
-                  { id: 'harshitaa', name: 'Harshitaa Yarramsetti' }
-                ]
-              },
-              {
-                id: 2,
-                name: 'Trip to Vegas',
-                members: [
-                  { id: 'you', name: 'You' },
-                  { id: 'naveen', name: 'Naveen Vanapalli' },
-                  { id: 'jadzia', name: 'Jadzia Dax' },
-                  { id: 'worf', name: 'Worf' }
-                ]
-              }
-            ]}
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <Routes>
+          <Route 
+            path="/" 
+            element={<HomePage 
+              expenses={expenses} 
+              user={user} 
+              totalOwed={totalOwed} 
+              totalOwe={totalOwe}
+              setShowExpenseForm={setShowExpenseForm} 
+            />} 
           />
-        </div>
-      )}
-    </div>
+          <Route path="/friends" element={<FriendsPage user={user} />} />
+          <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/groups/:groupId" element={<GroupPage />} />
+          <Route path="/activity" element={<ActivityPageWrapper expenses={expenses} user={user} />} />
+          <Route path="/account" element={<AccountPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signin" element={<SigninPage />} />
+          <Route path="/confirm" element={<ConfirmationPage />} />
+          <Route path="/forgot" element={<RecoverPage />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+        
+        {/* Navigation Bar */}
+        <NavigationBar onAddExpenseClick={() => setShowExpenseForm(true)} />
+        
+        {/* Expense Form Modal */}
+        {showExpenseForm && (
+          <div className="fixed inset-0 z-50">
+            <ExpenseForm 
+              onSubmit={handleAddExpense} 
+              onCancel={() => setShowExpenseForm(false)} 
+              currentUser={user}
+              friendsList={[
+                { id: 'naveen', name: 'Naveen Vanapalli', balance: '-42.75' },
+                { id: 'harshitaa', name: 'Harshitaa Yarramsetti', balance: '128.50' }
+              ]}
+              groupsList={[
+                { 
+                  id: 1, 
+                  name: 'Roommates',
+                  members: [
+                    { id: 'you', name: 'You' },
+                    { id: 'naveen', name: 'Naveen Vanapalli' },
+                    { id: 'harshitaa', name: 'Harshitaa Yarramsetti' }
+                  ]
+                },
+                {
+                  id: 2,
+                  name: 'Trip to Vegas',
+                  members: [
+                    { id: 'you', name: 'You' },
+                    { id: 'naveen', name: 'Naveen Vanapalli' },
+                    { id: 'jadzia', name: 'Jadzia Dax' },
+                    { id: 'worf', name: 'Worf' }
+                  ]
+                }
+              ]}
+            />
+          </div>
+        )}
+      </div>
+    </Router>
   );
 };
 

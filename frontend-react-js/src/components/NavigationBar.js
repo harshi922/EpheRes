@@ -1,89 +1,57 @@
-import React, { useState } from 'react';
-import { Home, Users, UserCircle, Activity, Plus } from 'lucide-react';
+import React from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Home, Users, Grid, Activity, Plus } from 'lucide-react';
 
-const NavigationBar = ({ activePage, onNavigate, onAddExpenseClick }) => {
-  const [showAddMenu, setShowAddMenu] = useState(false);
+const NavigationBar = ({ onAddExpenseClick }) => {
+  const location = useLocation();
   
-  // Add button menu options
-  const addOptions = [
-    { label: 'Expense', action: onAddExpenseClick },
-    { label: 'Group', action: () => onNavigate('groups-new') }
-  ];
-  
-  // Navigation items
   const navItems = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'groups', label: 'Groups', icon: Users },
-    { id: 'friends', label: 'Friends', icon: UserCircle },
-    { id: 'activity', label: 'Activity', icon: Activity }
+    { id: 'home', label: 'Home', icon: Home, path: '/' },
+    { id: 'friends', label: 'Friends', icon: Users, path: '/friends' },
+    { id: 'groups', label: 'Groups', icon: Grid, path: '/groups' },
+    { id: 'activity', label: 'Activity', icon: Activity, path: '/activity' }
   ];
-  
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
-      {/* Main Navigation */}
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
       <div className="flex justify-around items-center h-16">
-        {navItems.slice(0, 2).map(item => (
-          <button 
-            key={item.id}
-            onClick={() => onNavigate(item.id)}
-            className={`flex flex-col items-center justify-center w-full h-full ${
-              activePage === item.id ? 'text-green-500' : 'text-gray-500'
-            }`}
-          >
-            <item.icon className="w-6 h-6" />
-            <span className="text-xs mt-1">{item.label}</span>
-          </button>
-        ))}
-        
-        {/* Add Button */}
-        <div className="relative w-full flex justify-center">
-          <button 
-            onClick={() => setShowAddMenu(!showAddMenu)}
-            className="absolute -top-5 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg"
-          >
-            <Plus className="w-8 h-8 text-white" />
-          </button>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          // Check if current path matches this nav item
+          const isExactMatch = location.pathname === item.path;
+          // For the home item, also match if pathname is just '/'
+          const isActive = isExactMatch || (item.id === 'home' && location.pathname === '/');
           
-          {/* Add Menu (appears when add button is clicked) */}
-          {showAddMenu && (
-            <div className="absolute bottom-16 bg-white rounded-lg shadow-lg p-2 border">
-              {addOptions.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    option.action();
-                    setShowAddMenu(false);
-                  }}
-                  className="flex items-center w-full px-4 py-2 text-left hover:bg-gray-100 rounded-md"
-                >
-                  <span>{option.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          return (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              className={({ isActive }) => `flex flex-col items-center justify-center w-full h-full ${
+                isActive ? 'text-green-500' : 'text-gray-500'
+              }`}
+              end={item.id === 'home'} // Only exact matching for home route
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={24} className={isActive ? 'text-green-500' : 'text-gray-500'} />
+                  <span className="text-xs mt-1">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          );
+        })}
         
-        {navItems.slice(2, 4).map(item => (
-          <button 
-            key={item.id}
-            onClick={() => onNavigate(item.id)}
-            className={`flex flex-col items-center justify-center w-full h-full ${
-              activePage === item.id ? 'text-green-500' : 'text-gray-500'
-            }`}
-          >
-            <item.icon className="w-6 h-6" />
-            <span className="text-xs mt-1">{item.label}</span>
-          </button>
-        ))}
+        <button
+          onClick={onAddExpenseClick}
+          className="flex flex-col items-center justify-center w-full h-full"
+          aria-label="Add expense"
+        >
+          <div className="bg-green-500 rounded-full p-2">
+            <Plus size={20} className="text-white" />
+          </div>
+          <span className="text-xs mt-1 text-gray-500">Add</span>
+        </button>
       </div>
-      
-      {/* Overlay to close add menu when clicking outside */}
-      {showAddMenu && (
-        <div 
-          className="fixed inset-0 bg-transparent z-10" 
-          onClick={() => setShowAddMenu(false)}
-        />
-      )}
     </div>
   );
 };
