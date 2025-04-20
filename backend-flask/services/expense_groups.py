@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta, timezone
 
 class ExpenseGroups:
-  def run(user_handle):
+  def run(user_handle=None):
     model = {
       'errors': None,
       'data': None
@@ -14,8 +14,6 @@ class ExpenseGroups:
       model['errors'] = ['user_handle_blank']
       return model
 
-    # In a real app, this would fetch groups from the database
-    # Sample data for now
     results = [
       {
         'uuid': '24b95582-9e7b-4e0a-9ad1-639773ab7552',

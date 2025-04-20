@@ -92,12 +92,11 @@
 //     </article>
 //   );
 // }
-
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import './GroupsPage.css';
 import React, { useState, useEffect } from "react";
 
-import DesktopNavigation from '../components/DesktopNavigation';
+import NavigationBar from '../components/NavigationBar';
 import GroupsList from '../components/GroupsList';
 import GroupForm from '../components/GroupForm';
 
@@ -197,17 +196,27 @@ export default function GroupsPage() {
   }, []);
 
   return (
-    <article>
-      <DesktopNavigation user={user} active={'groups'} />
-      <div className='content'>
-        <GroupForm
-          popped={groupFormPopped}
-          setPopped={setGroupFormPopped}
-          setGroups={setGroups}
-        />
+    <div className="min-h-screen bg-gray-50 pb-16">
+      <GroupForm
+        popped={groupFormPopped}
+        setPopped={setGroupFormPopped}
+        setGroups={setGroups}
+      />
+      
+      <div className="max-w-4xl mx-auto px-4 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">Groups</h1>
+        </div>
+        
         {error ? (
           <div className="bg-red-100 p-4 rounded-lg text-red-700 mb-4">
-            {error}
+            <p>{error}</p>
+            <button 
+              onClick={loadGroups}
+              className="mt-2 px-4 py-1 bg-red-600 text-white rounded-md"
+            >
+              Try Again
+            </button>
           </div>
         ) : (
           <GroupsList
@@ -218,6 +227,9 @@ export default function GroupsPage() {
           />
         )}
       </div>
-    </article>
+      
+      {/* Fixed Bottom Navigation */}
+      <NavigationBar />
+    </div>
   );
 }

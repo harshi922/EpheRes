@@ -321,6 +321,26 @@ def data_home():
     data = HomeActivities.run()
   return data, 200
 
+@app.route("/api/groups", methods=['GET'])
+@cross_origin()
+def data_groups():
+  app.logger.debug(request.headers)
+  access_token = extract_access_token(request.headers)
+
+  try:
+    claims = cognito_verification.verify(access_token)
+    app.logger.debug("authenticated")
+    app.logger.debug(claims)
+    data = ExpenseGroups.run(handle=claims['username'])
+  except TokenVerifyError as e:
+    app.logger.debug(e)
+    app.logger.debug("unauthenticated")
+    return {"error": "Unauthorized"}, 401
+
+  return data['data'], 200 if data['errors'] is None else (data['errors'], 422)
+
+
+
 # API Route for group activities
 @app.route("/api/groups/@<string:handle>", methods=['GET'])
 @cross_origin()  # Fixed missing parentheses

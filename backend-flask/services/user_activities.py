@@ -37,7 +37,6 @@ class UserActivities:
     if user_handle == None or len(user_handle) < 1:
       model['errors'] = ['blank_user_handle']
     else:
-      # In a real app, this would query the database for expenses involving this user
       results = [{
         'uuid': '248959df-3079-4947-b847-9e0892d1bab4',
         'created_by': user_handle,

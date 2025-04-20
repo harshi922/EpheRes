@@ -7,6 +7,7 @@ import DesktopNavigation from '../components/DesktopNavigation';
 import ExpenseFeed from '../components/ExpenseFeed';
 import ExpenseForm from '../components/ExpenseForm';
 import Summary from '../components/Summary';
+import NavigationBar from '../components/NavigationBar';
 
 export default function GroupPage() {
   const [expenses, setExpenses] = useState([]);
@@ -126,7 +127,7 @@ export default function GroupPage() {
 
   return (
     <article>
-      <DesktopNavigation user={user} active={'groups'} setPopped={setPopped} />
+      <NavigationBar user={user} active={'groups'} setPopped={setPopped} />
       <div className='content'>
         <ExpenseForm  
           popped={popped}

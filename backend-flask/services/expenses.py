@@ -10,8 +10,7 @@ class Expenses:
 
     now = datetime.now(timezone.utc).astimezone()
 
-    # In a real app, this would fetch expenses between users
-    # If receiver handle is null, show all expenses for sender
+ 
     
     results = [
       {

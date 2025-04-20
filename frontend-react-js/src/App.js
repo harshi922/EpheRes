@@ -418,7 +418,7 @@ const App = () => {
           <Route path="/friends" element={<FriendsPage user={user} />} />
           <Route path="/groups" element={<GroupsPage />} />
           <Route path="/groups/:groupId" element={<GroupPage />} />
-          <Route path="/activity" element={<ActivityPageWrapper expenses={expenses} user={user} />} />
+          <Route path="/activity" element={<ActivityPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signin" element={<SigninPage />} />

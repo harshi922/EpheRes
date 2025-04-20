@@ -1,19 +1,22 @@
+
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import './ActivityPage.css';
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-import DesktopNavigation from '../components/DesktopNavigation';
+import NavigationBar from '../components/NavigationBar';
 import ExpenseFilter from '../components/ExpenseFilter';
 import ExpenseFeed from '../components/ExpenseFeed';
 
 export default function ActivityPage() {
-  const [activities, setActivities] = React.useState([]);
-  const [user, setUser] = React.useState(null);
-  const [filterCriteria, setFilterCriteria] = React.useState({
+  const [activities, setActivities] = useState([]);
+  const [user, setUser] = useState(null);
+  const [filterCriteria, setFilterCriteria] = useState({
     category: '',
     dateRange: 'all',
     searchTerm: ''
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const dataFetchedRef = React.useRef(false);
 
   const checkAuth = async () => {
@@ -24,25 +27,35 @@ export default function ActivityPage() {
         localStorage.setItem("access_token", session.tokens.accessToken.toString());
       }
       
-      const currentUser = await getCurrentUser();
-      
-      setUser({
-        display_name: currentUser.signInDetails?.userAttributes?.name || currentUser.username,
-        handle: currentUser.signInDetails?.userAttributes?.preferred_username || currentUser.username
-      });
-      
-      return session;
+      try {
+        const currentUser = await getCurrentUser();
+        
+        setUser({
+          display_name: currentUser.signInDetails?.userAttributes?.name || currentUser.username,
+          handle: currentUser.signInDetails?.userAttributes?.preferred_username || currentUser.username
+        });
+        
+        return true;
+      } catch (error) {
+        console.log("Error getting current user:", error);
+        return false;
+      }
     } catch (error) {
-      console.log("Error in checkAuth function:", error);
-      return null;
+      console.log("Auth error:", error);
+      return false;
     }
   };
 
   const loadActivities = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      const accessToken = localStorage.getItem("access_token");
-      
-      if (!accessToken) {
+      // Get the access token
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setError("Authentication required");
+        setIsLoading(false);
         return;
       }
       
@@ -56,7 +69,7 @@ export default function ActivityPage() {
       const res = await fetch(url, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${token}`,
         }
       });
       
@@ -93,30 +106,45 @@ export default function ActivityPage() {
         }
         
         setActivities(filteredData);
+      } else if (res.status === 401) {
+        // Unauthorized - token may be invalid
+        setError("Session expired. Please sign in again.");
+        localStorage.removeItem('access_token');
+        setTimeout(() => {
+          window.location.href = "/signin";
+        }, 2000);
+      } else {
+        setError("Failed to load activity data");
       }
     } catch (err) {
       console.log("Error loading activities:", err);
+      setError("Connection error. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Auth and data loading
-  React.useEffect(() => {
+  useEffect(() => {
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
     
-    checkAuth()
-      .then((session) => {
-        if (session && session.tokens) {
-          loadActivities();
-        }
-      })
-      .catch((err) => {
-        console.log('Error during authentication check:', err);
-      });
+    const initialize = async () => {
+      const isAuthenticated = await checkAuth();
+      
+      if (isAuthenticated) {
+        await loadActivities();
+      } else {
+        // Redirect to sign in if not authenticated
+        window.location.href = "/signin";
+      }
+    };
+    
+    initialize();
   }, []);
   
   // Reload activities when filter criteria change
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       loadActivities();
     }
@@ -125,20 +153,43 @@ export default function ActivityPage() {
   const handleFilterChange = (newFilterCriteria) => {
     setFilterCriteria(newFilterCriteria);
   };
-
+  
   return (
-    <article>
-      <DesktopNavigation user={user} active={'activity'} />
-      <div className='content'>
-        <ExpenseFilter 
-          criteria={filterCriteria} 
-          onFilterChange={handleFilterChange} 
-        />
-        <ExpenseFeed 
-          title="Recent Activity" 
-          expenses={activities} 
-        />
+    <div className="min-h-screen bg-gray-50 pb-16">
+      <div className="max-w-4xl mx-auto px-4 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">Activity</h1>
+        </div>
+        
+        {error ? (
+          <div className="bg-red-100 p-4 rounded-lg text-red-700 mb-4">
+            <p>{error}</p>
+            <button 
+              onClick={() => loadActivities()}
+              className="mt-2 px-4 py-1 bg-red-600 text-white rounded-md"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : (
+          <>
+            <ExpenseFilter 
+              criteria={filterCriteria} 
+              onFilterChange={handleFilterChange} 
+            />
+            
+            <ExpenseFeed 
+              title="Recent Activity" 
+              expenses={activities}
+              currentUser={user}
+              isLoading={isLoading}
+            />
+          </>
+        )}
       </div>
-    </article>
+      
+      {/* Fixed Bottom Navigation */}
+      <NavigationBar />
+    </div>
   );
 }

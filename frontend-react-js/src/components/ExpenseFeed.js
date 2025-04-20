@@ -1,14 +1,213 @@
+// import React, { useState } from 'react';
+// import { Search, Filter } from 'lucide-react';
+// import ExpenseItem from './ExpenseItem';
+// import ExpenseForm from './ExpenseForm';
+// const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpense, isLoading, onRefresh }) => {
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [filterVisible, setFilterVisible] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [popped, setPopped] = useState(false);
+//   const [localExpenses, setLocalExpenses] = useState(expenses);
+
+//   const safeExpenses = Array.isArray(localExpenses) ? localExpenses : [];
+  
+//   // Handle expense search
+//   const handleSearch = async (e) => {
+//     e.preventDefault();
+//     if (!searchTerm.trim()) return;
+    
+//     try {
+//       setError(null);
+      
+//       // Get token from localStorage
+//       const token = localStorage.getItem('access_token');
+//       if (!token) {
+//         setError('Authentication required');
+//         return;
+//       }
+      
+//       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/expenses/search?term=${encodeURIComponent(searchTerm)}`;
+//       const res = await fetch(backend_url, {
+//         method: "GET",
+//         headers: {
+//           'Authorization': `Bearer ${token}`
+//         }
+//       });
+      
+//       const data = await res.json();
+      
+//       if (res.status === 200 && data) {
+//         // Update expenses list with search results
+//         if (onRefresh) {
+//           onRefresh(data);
+//         }
+//       } else {
+//         setError('Search failed. Please try again.');
+//       }
+//     } catch (err) {
+//       console.error("Search error:", err);
+//       setError('Failed to connect to the server');
+//     }
+//   };
+
+//   // Filter expenses if search term is present (client-side filtering)
+//   const filteredExpenses = searchTerm && !onRefresh
+//     ? safeExpenses.filter(exp => {
+//         const description = exp.description || exp.message || '';
+//         const paidBy = exp.created_by || exp.display_name || '';
+        
+//         return (
+//           description.toLowerCase().includes(searchTerm.toLowerCase()) || 
+//           paidBy.toLowerCase().includes(searchTerm.toLowerCase())
+//         );
+//       })
+//     : safeExpenses;
+
+//   return (
+//     <div className="flex flex-col bg-gray-50 h-full">
+      
+//       {onAddExpense && (
+//         <div className="p-4 bg-white border-t">
+//           <button
+//             onClick={() => setPopped(true)}
+//             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+//           >
+//             + Add Expense
+//           </button>
+//         </div>
+//       )}
+
+//       {/* Expense Form Modal */}
+//       {popped && (
+//         <ExpenseForm
+//           popped={popped}
+//           setPopped={setPopped}
+//           setExpenses={setLocalExpenses}
+//         />
+//       )}
+
+
+//       {/* Conditionally render expenses */}
+//       {filteredExpenses.length > 0 ? (
+//         <div>
+//           {filteredExpenses.map(expense => (
+//             <ExpenseItem key={expense.id} expense={expense} />
+//           ))}
+//         </div>
+//       ) : (
+//         <div>No activities to show</div>
+//       )}
+
+//     </div>
+//   );
+// };
+
+// // const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpense, isLoading, onRefresh }) => {
+// //   const [searchTerm, setSearchTerm] = useState('');
+// //   const [filterVisible, setFilterVisible] = useState(false);
+// //   const [error, setError] = useState(null);
+
+// //   // 🆕 Add these states
+// //   const [popped, setPopped] = useState(false);
+// //   const [localExpenses, setLocalExpenses] = useState(expenses);
+
+// //   const safeExpenses = Array.isArray(localExpenses) ? localExpenses : [];
+  
+// //   // Handle expense search
+// //   const handleSearch = async (e) => {
+// //     e.preventDefault();
+// //     if (!searchTerm.trim()) return;
+    
+// //     try {
+// //       setError(null);
+      
+// //       // Get token from localStorage
+// //       const token = localStorage.getItem('access_token');
+// //       if (!token) {
+// //         setError('Authentication required');
+// //         return;
+// //       }
+      
+// //       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/expenses/search?term=${encodeURIComponent(searchTerm)}`;
+// //       const res = await fetch(backend_url, {
+// //         method: "GET",
+// //         headers: {
+// //           'Authorization': `Bearer ${token}`
+// //         }
+// //       });
+      
+// //       const data = await res.json();
+      
+// //       if (res.status === 200 && data) {
+// //         // Update expenses list with search results
+// //         if (onRefresh) {
+// //           // If there's a refresh handler, let the parent component handle it
+// //           onRefresh(data);
+// //         }
+// //       } else {
+// //         setError('Search failed. Please try again.');
+// //       }
+// //     } catch (err) {
+// //       console.error("Search error:", err);
+// //       setError('Failed to connect to the server');
+// //     }
+// //   };
+  
+// //   // Filter expenses if search term is present (client-side filtering)
+// //   const filteredExpenses = searchTerm && !onRefresh
+// //     ? safeExpenses.filter(exp => {
+// //         // Guard against undefined properties
+// //         const description = exp.description || exp.message || '';
+// //         const paidBy = exp.created_by || exp.display_name || '';
+        
+// //         return (
+// //           description.toLowerCase().includes(searchTerm.toLowerCase()) || 
+// //           paidBy.toLowerCase().includes(searchTerm.toLowerCase())
+// //         );
+// //       })
+// //     : safeExpenses;
+  
+// //   return (
+// //     <div className="flex flex-col bg-gray-50 h-full">
+
+// //       {onAddExpense && (
+// //         <div className="p-4 bg-white border-t">
+// //           <button
+// //             onClick={() => setPopped(true)}
+// //             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+// //           >
+// //             + Add Expense
+// //           </button>
+// //         </div>
+// //       )}
+
+// //       {/* Expense Form Modal */}
+// //       {popped && (
+// //         <ExpenseForm
+// //           popped={popped}
+// //           setPopped={setPopped}
+// //           setExpenses={setLocalExpenses}
+// //         />
+// //       )}
+// //     </div>
+// //   );
+// // };
+
+// export default ExpenseFeed;
 import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import ExpenseItem from './ExpenseItem';
+import ExpenseForm from './ExpenseForm';
 
 const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpense, isLoading, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [popped, setPopped] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+    const [localExpenses, setLocalExpenses] = useState(expenses);
   const [error, setError] = useState(null);
   
   // Make sure expenses is an array
-  const safeExpenses = Array.isArray(expenses) ? expenses : [];
+  const safeExpenses = Array.isArray(localExpenses) ? localExpenses : [];
   
   // Handle expense search
   const handleSearch = async (e) => {
@@ -125,18 +324,65 @@ const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpe
         )}
       </div>
       
-      {/* Add Expense Button - only shown if onAddExpense prop is provided */}
       {onAddExpense && (
-        <div className="p-4 sticky bottom-0">
-          <button 
-            onClick={onAddExpense}
-            className="w-full py-3 bg-green-500 text-white rounded-lg font-medium shadow-md"
-          >
-            + Add Expense
-          </button>
-        </div>
-      )}
+  <div className="p-4 sticky bottom-0">
+    <button 
+      onClick={() => setPopped(true)}  // 👈 open modal
+      className="w-full py-3 bg-green-500 text-white rounded-lg font-medium shadow-md"
+    >
+      + Add Expense
+    </button>
+  </div>
+)}
+{popped && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50 animate-fade-in">
+    <div className="relative bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+      
+      {/* Close Button */}
+      <button 
+        className="absolute top-3 right-3 text-gray-600 hover:text-red-500 text-xl font-bold"
+        onClick={() => setPopped(false)}
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+      <ExpenseForm 
+        popped={popped}
+        setPopped={setPopped}
+        setExpenses={setLocalExpenses}
+      />
     </div>
+  </div>
+)}
+
+{popped && (
+  <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in overflow-y-auto">
+    <div className="relative w-full sm:max-w-md bg-white sm:rounded-xl sm:my-10 p-4 sm:p-6 shadow-lg sm:mt-0 mt-0 min-h-screen sm:min-h-fit">
+
+      {/* Sticky Close Button for mobile */}
+      <div className="sticky top-0 bg-white z-10 flex justify-end p-2 sm:static sm:justify-end">
+        <button 
+          className="text-gray-600 hover:text-red-500 text-2xl font-bold"
+          onClick={() => setPopped(false)}
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Actual Form */}
+      <ExpenseForm 
+        popped={popped}
+        setPopped={setPopped}
+        setExpenses={setLocalExpenses}
+      />
+    </div>
+  </div>
+)}
+
+</div>
+
   );
 };
 

@@ -2,8 +2,8 @@ import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import './FriendsPage.css';
 import React, { useState, useEffect } from "react";
 
-import DesktopNavigation from '../components/DesktopNavigation';
-import {BalanceCard, HomepageBalanceCard} from '../components/BalanceCard';
+import NavigationBar from '../components/NavigationBar';
+import {BalanceCard} from '../components/BalanceCard';
 import ExpenseFeed from '../components/ExpenseFeed';
 import PaymentForm from '../components/PaymentForm';
 
@@ -210,118 +210,160 @@ export default function FriendsPage() {
   }, []);
 
   return (
-    <article>
-      <DesktopNavigation user={user} active={'friends'} />
-      <div className='content'>
-        {/* Payment Form Modal */}
-        <PaymentForm
-          popped={paymentFormPopped}
-          setPopped={setPaymentFormPopped}
-          recipient={selectedFriend}
-          onSubmit={handlePaymentComplete}
-        />
-        
-        {/* Add Friend Form Modal */}
-        {addFriendFormVisible && (
-          <div className="add_friend_overlay">
-            <div className="add_friend_form">
-              <h2>Add a Friend</h2>
+    <div className="min-h-screen bg-gray-50 pb-16">
+      {/* Payment Form Modal */}
+      <PaymentForm
+        popped={paymentFormPopped}
+        setPopped={setPaymentFormPopped}
+        recipient={selectedFriend}
+        onSubmit={handlePaymentComplete}
+      />
+      
+      {/* Add Friend Form Modal */}
+      {addFriendFormVisible && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Add a Friend</h2>
               <form onSubmit={handleAddFriend}>
-                <div className="field">
-                  <label>Friend's Email</label>
+                <div className="mb-4">
+                  <label htmlFor="friendEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                    Friend's Email
+                  </label>
                   <input
                     type="email"
+                    id="friendEmail"
                     placeholder="friend@example.com"
                     value={newFriendEmail}
                     onChange={(e) => setNewFriendEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   />
                 </div>
                 
-                {addFriendError && <div className="errors">{addFriendError}</div>}
+                {addFriendError && (
+                  <div className="mb-4 text-sm text-red-600">
+                    {addFriendError}
+                  </div>
+                )}
                 
-                <div className="form_actions">
-                  <button type="submit">Send Invitation</button>
-                  <button type="button" onClick={() => setAddFriendFormVisible(false)}>Cancel</button>
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAddFriendFormVisible(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
+                  >
+                    Send Invitation
+                  </button>
                 </div>
               </form>
             </div>
           </div>
-        )}
+        </div>
+      )}
+      
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">Friends</h1>
+        </div>
         
         {error ? (
-          <div className="error_message">
+          <div className="bg-red-100 p-4 rounded-lg text-red-700 mb-4">
             <p>{error}</p>
-            <button onClick={loadFriendData}>Try Again</button>
+            <button 
+              onClick={loadFriendData} 
+              className="mt-2 px-4 py-1 bg-red-600 text-white rounded-md"
+            >
+              Try Again
+            </button>
           </div>
         ) : (
-          <div className='friends_content'>
-            <div className='friends_list'>
-              <div className="friends_header">
-                <h2>Friends</h2>
-                <div className="search_and_add">
-                  <input
-                    type="text"
-                    placeholder="Search friends"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search_input"
-                  />
-                  <button 
-                    className="add_friend_button"
-                    onClick={() => setAddFriendFormVisible(true)}
-                  >
-                    + Add
-                  </button>
-                </div>
-              </div>
-              
-              {isLoading && !selectedFriend ? (
-                <div className="loading_indicator">
-                  <div className="spinner"></div>
-                  <p>Loading friends...</p>
-                </div>
-              ) : filteredFriends.length > 0 ? (
-                filteredFriends.map(friend => (
-                  <div 
-                    key={friend.handle} 
-                    className={`friend_item ${selectedFriend?.handle === friend.handle ? 'selected' : ''}`}
-                    onClick={() => handleFriendSelect(friend)}
-                  >
-                    <div className='friend_avatar'></div>
-                    <div className='friend_info'>
-                      <div className='friend_name'>{friend.display_name}</div>
-                      <BalanceCard balance={friend.balance} />
-                    </div>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            <div className='md:col-span-1'>
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="p-4 border-b">
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="font-medium text-gray-800">Friends</h2>
                     <button 
-                      className='pay_button' 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePaymentClick(friend);
-                      }}
+                      onClick={() => setAddFriendFormVisible(true)}
+                      className="text-sm px-2 py-1 bg-green-500 text-white rounded"
                     >
-                      {parseFloat(friend.balance) < 0 ? 'Pay' : 'Request'}
+                      + Add
                     </button>
                   </div>
-                ))
-              ) : searchTerm ? (
-                <div className="no_results">
-                  <p>No friends match your search</p>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search friends"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full p-2 border rounded-md pr-8"
+                    />
+                    <svg className="absolute right-2 top-2.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                 </div>
-              ) : (
-                <div className="no_friends">
-                  <p>You haven't added any friends yet</p>
-                  <button 
-                    className="add_first_friend"
-                    onClick={() => setAddFriendFormVisible(true)}
-                  >
-                    Add your first friend
-                  </button>
-                </div>
-              )}
+                
+                {isLoading && !selectedFriend ? (
+                  <div className="p-4 text-center text-gray-600">
+                    <div className="inline-block w-6 h-6 border-2 border-gray-200 border-t-green-500 rounded-full animate-spin mr-2"></div>
+                    Loading friends...
+                  </div>
+                ) : filteredFriends.length > 0 ? (
+                  <div className="max-h-[calc(100vh-240px)] overflow-y-auto">
+                    {filteredFriends.map(friend => (
+                      <div 
+                        key={friend.handle} 
+                        className={`p-4 border-b cursor-pointer hover:bg-gray-50 flex justify-between items-center ${
+                          selectedFriend?.handle === friend.handle ? 'bg-gray-50' : ''
+                        }`}
+                        onClick={() => handleFriendSelect(friend)}
+                      >
+                        <div>
+                          <div className="font-medium">{friend.display_name}</div>
+                          <BalanceCard balance={friend.balance} />
+                        </div>
+                        <button 
+                          className={`px-3 py-1 rounded text-white text-sm ${
+                            parseFloat(friend.balance) < 0 ? 'bg-green-500' : 'bg-blue-500'
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePaymentClick(friend);
+                          }}
+                        >
+                          {parseFloat(friend.balance) < 0 ? 'Pay' : 'Request'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : searchTerm ? (
+                  <div className="p-6 text-center text-gray-500">
+                    No friends match your search
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-gray-500">
+                    <p>You haven't added any friends yet</p>
+                    <button 
+                      className="mt-3 px-4 py-2 bg-green-500 text-white rounded-md"
+                      onClick={() => setAddFriendFormVisible(true)}
+                    >
+                      Add your first friend
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             
-            <div className='friend_expenses'>
+            <div className='md:col-span-2'>
               {selectedFriend ? (
                 <ExpenseFeed 
                   title={`Expenses with ${selectedFriend.display_name}`} 
@@ -330,7 +372,7 @@ export default function FriendsPage() {
                   isLoading={isLoading && !!selectedFriend}
                 />
               ) : (
-                <div className='select_friend_prompt'>
+                <div className='bg-white rounded-lg shadow p-8 text-center text-gray-500 h-48 flex items-center justify-center'>
                   <p>Select a friend to view your shared expenses</p>
                 </div>
               )}
@@ -338,6 +380,8 @@ export default function FriendsPage() {
           </div>
         )}
       </div>
-    </article>
+      
+      <NavigationBar />
+    </div>
   );
 }
