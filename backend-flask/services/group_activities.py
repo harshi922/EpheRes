@@ -1,3 +1,4 @@
+# services/group_activities.py
 from datetime import datetime, timedelta, timezone
 
 class GroupActivities:

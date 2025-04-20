@@ -80,6 +80,7 @@
 
 
 # services/home_activities.py
+# services/home_activities.py
 from datetime import datetime, timedelta, timezone
 
 class HomeActivities:
@@ -137,7 +138,7 @@ class HomeActivities:
       ]
     }]
     
-    # If the user is authenticated, we might want to show an extra expense
+    # If the user is authenticated, show extra personalized expenses
     if cognito_user_id != None:
       extra = {
         'uuid': '2sd59df-3079-4947-b847-9e0892d1bab4',

@@ -240,6 +240,26 @@ import RecoverPage from './pages/RecoverPage';
 import ConfirmationPage from './pages/ConfirmationPage';
 import ExpenseForm from './components/ExpenseForm';
 import { HomepageBalanceCard } from './components/BalanceCard';
+import { Amplify } from 'aws-amplify';
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      // Amazon Cognito User Pool ID
+      userPoolId: process.env.REACT_APP_AWS_USER_POOLS_ID,
+      // Amazon Cognito Web Client ID
+      userPoolClientId: process.env.REACT_APP_CLIENT_ID,
+      region: process.env.REACT_APP_AWS_PROJECT_REGION,
+      loginWith: {
+        oauth: {}
+      },
+      username: true, 
+      email: true,
+    }
+  }
+});
+
+const currentConfig = Amplify.getConfig();
 
 const HomePage = ({ expenses, user, totalOwed, totalOwe, setShowExpenseForm }) => {
   return (

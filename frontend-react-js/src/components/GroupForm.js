@@ -1,42 +1,67 @@
 import './GroupForm.css';
-import React from "react";
+import React, { useState } from "react";
 import process from 'process';
 
 export default function GroupForm(props) {
-  const [name, setName] = React.useState('');
-  const [members, setMembers] = React.useState('');
-  const [errors, setErrors] = React.useState('');
+  const [name, setName] = useState('');
+  const [members, setMembers] = useState('');
+  const [errors, setErrors] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onsubmit = async (event) => {
     event.preventDefault();
     setErrors('');
+    setIsSubmitting(true);
+    
     try {
-      const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/groups`
+      // Validate inputs
+      if (!name.trim()) {
+        setErrors('Group name is required');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setErrors('You must be logged in to create groups');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/groups`;
       const res = await fetch(backend_url, {
         method: "POST",
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           group_name: name,
-          members: members.split(',').map(m => m.trim())
+          members: members ? members.split(',').map(m => m.trim()) : []
         }),
       });
-      let data = await res.json();
+      
+      const data = await res.json();
+      
       if (res.status === 200) {
-        // add group to the list
+        // Add group to the list
         props.setGroups(current => [data,...current]);
-        // reset and close the form
-        setName('')
-        setMembers('')
-        props.setPopped(false)
+        
+        // Reset and close the form
+        setName('');
+        setMembers('');
+        props.setPopped(false);
       } else {
-        setErrors(data.errors ? data.errors.join(', ') : 'An error occurred')
+        // Handle backend errors
+        setErrors(Array.isArray(data.errors) ? data.errors.join(', ') : 'Failed to create group');
       }
     } catch (err) {
-      console.log(err);
-      setErrors('An error occurred');
+      console.error("Error creating group:", err);
+      setErrors('Failed to connect to the server. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -77,10 +102,13 @@ export default function GroupForm(props) {
         {errors && <div className='errors'>{errors}</div>}
         
         <div className='submit'>
-          <button type='submit'>Create Group</button>
+          <button type='submit' disabled={isSubmitting}>
+            {isSubmitting ? 'Creating...' : 'Create Group'}
+          </button>
           <button type='button' onClick={() => props.setPopped(false)}>Cancel</button>
         </div>
       </form>
     );
   }
+  return null;
 }

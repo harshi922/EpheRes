@@ -201,30 +201,25 @@
 # if __name__ == "__main__":
 #   app.run(debug=True)
 
-
-
-# Modified app.py for Splitwise functionality
-from flask import Flask
-from flask import request, session
+from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 import os
-
-# Import modified services for Splitwise functionality
-from services.home_activities import *
-from services.group_activities import *  # Changed from notifications_activities
-from services.user_activities import *
-from services.create_expense import *    # Changed from create_activity
-from services.create_payment import *    # Changed from create_reply
-from services.search_expenses import *   # Changed from search_activities
-from services.expense_groups import *    # Changed from message_groups
-from services.expenses import *          # Changed from messages
-from services.create_group import *      # Changed from create_message
-from services.show_expense import *      # Changed from show_activity
-
-# Keep auth and monitoring code the same
-from lib.cognito_verification_token import CognitoTokenService, extract_access_token, TokenVerifyError   
-
-# Monitoring stuff remains unchanged
+import uuid
+from datetime import datetime, timezone
+# Import all the services
+from services.home_activities import HomeActivities
+from services.user_activities import UserActivities
+from services.group_activities import GroupActivities
+from services.expense_groups import ExpenseGroups
+from services.expenses import Expenses
+from services.create_expense import CreateExpense
+from services.create_group import CreateGroup
+from services.create_payment import CreatePayment
+from services.search_expenses import SearchExpenses
+from services.show_expense import ShowExpense
+# Authentication services
+from lib.cognito_verification_token import CognitoTokenService, extract_access_token, TokenVerifyError
+# Monitoring and observability imports (retained from original code)
 from opentelemetry import trace
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
@@ -233,47 +228,38 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 
-from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
+app = Flask(__name__)
 
-import watchtower
-import logging
-import sys
-from time import strftime
-
-# Setup tracing and logging (unchanged)
+# Initialize tracing (from original code)
 provider = TracerProvider()
 processor = BatchSpanProcessor(OTLPSpanExporter())
 provider.add_span_processor(processor)
-
 simple_processor = SimpleSpanProcessor(ConsoleSpanExporter())
-provider.add_span_processor(simple_processor) 
-
+provider.add_span_processor(simple_processor)
 trace.set_tracer_provider(provider)
 tracer = trace.get_tracer(__name__)
 
-app = Flask(__name__)
-
-# Auth code remains the same
+# Configure authentication
 cognito_verification = CognitoTokenService(
   user_pool_id=os.getenv("AWS_COGNITO_USER_POOL_ID"), 
   user_pool_client_id=os.getenv("AWS_COGNITO_USER_POOL_CLIENT_ID"), 
   region=os.getenv("AWS_DEFAULT_REGION")
 )
-
 app.config['AWS_COGNITO_USER_POOL_ID'] = os.getenv("AWS_COGNITO_USER_POOL_ID")
 app.config['AWS_COGNITO_APP_CLIENT_ID'] = os.getenv("AWS_COGNITO_USER_POOL_CLIENT_ID")
 app.config['AWS_REGION'] = os.getenv("AWS_DEFAULT_REGION")
 
-# Instrumentation (unchanged)
+# Enable tracing
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
-frontend = os.getenv('FRONTEND_URL')
-backend = os.getenv('BACKEND_URL')
-origins = [frontend, backend]
+# Configure CORS
+frontend = os.getenv('FRONTEND_URL', '*')
+backend = os.getenv('BACKEND_URL', '*')
+origins = [frontend, backend, '*']  # Add wildcard as fallback
 
-cors = CORS(
+# Apply CORS to the entire app
+CORS(
     app, 
     resources={r"/api/*": {"origins": origins}},
     supports_credentials=True,
@@ -282,8 +268,9 @@ cors = CORS(
     methods=["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE"]
 )
 
-# Modified API Routes for Splitwise clone
+# API Routes for Expense Groups
 @app.route("/api/expense_groups", methods=['GET'])
+@cross_origin()
 def data_expense_groups():
   user_handle = 'andrewbrown'  # This would be retrieved from auth
   model = ExpenseGroups.run(user_handle=user_handle)
@@ -292,48 +279,51 @@ def data_expense_groups():
   else:
     return model['data'], 200
 
+# API Route for Expenses between users
 @app.route("/api/expenses/@<string:handle>", methods=['GET'])
+@cross_origin()  # Added missing parentheses
 def data_expenses(handle):
-  user_sender_handle = 'andrewbrown'  # This would be retrieved from auth
-  user_receiver_handle = request.args.get('user_receiver_handle')
-
+  user_sender_handle = 'andrewbrown'  # Would be retrieved from auth
+  user_receiver_handle = request.args.get('user_receiver_handle', handle)
   model = Expenses.run(user_sender_handle=user_sender_handle, user_receiver_handle=user_receiver_handle)
   if model['errors'] is not None:
     return model['errors'], 422
   else:
     return model['data'], 200
-  return
 
+# API Route to create a new group
 @app.route("/api/groups", methods=['POST','OPTIONS'])
 @cross_origin()
 def data_create_group():
-  user_handle = 'andrewbrown'  # This would be retrieved from auth
+  user_handle = 'andrewbrown'  # Would be retrieved from auth
   group_name = request.json['group_name']
-  members = request.json['members']
-
+  members = request.json.get('members', [])
   model = CreateGroup.run(group_name=group_name, user_handle=user_handle, members=members)
   if model['errors'] is not None:
     return model['errors'], 422
   else:
     return model['data'], 200
-  return
 
+# API Route for home feed (authenticated or unauthenticated)
 @app.route("/api/expenses/home", methods=['GET'])
+@cross_origin()  # Added cross_origin decorator
 def data_home():
   app.logger.debug(request.headers)
   access_token = extract_access_token(request.headers)
   try:
-      claims = cognito_verification.verify(access_token)
-      app.logger.debug("authenticated")
-      app.logger.debug(claims)
-      data = HomeActivities.run(cognito_user_id=claims['username'])
+    claims = cognito_verification.verify(access_token)
+    app.logger.debug("authenticated")
+    app.logger.debug(claims)
+    data = HomeActivities.run(cognito_user_id=claims['username'])
   except TokenVerifyError as e:
-      app.logger.debug(e)
-      app.logger.debug("unauthenticated")
-      data = HomeActivities.run()
+    app.logger.debug(e)
+    app.logger.debug("unauthenticated")
+    data = HomeActivities.run()
   return data, 200
 
+# API Route for group activities
 @app.route("/api/groups/@<string:handle>", methods=['GET'])
+@cross_origin()  # Fixed missing parentheses
 def data_group_activities(handle):
   model = GroupActivities.run(handle)
   if model['errors'] is not None:
@@ -341,7 +331,9 @@ def data_group_activities(handle):
   else:
     return model['data'], 200
 
+# API Route for expense search
 @app.route("/api/expenses/search", methods=['GET'])
+@cross_origin()  # Added cross_origin decorator
 def data_search():
   term = request.args.get('term')
   model = SearchExpenses.run(term)
@@ -349,12 +341,12 @@ def data_search():
     return model['errors'], 422
   else:
     return model['data'], 200
-  return
 
+# API Route to create a new expense
 @app.route("/api/expenses", methods=['POST','OPTIONS'])
 @cross_origin()
 def data_create_expense():
-  user_handle = 'andrewbrown'  # This would be retrieved from auth
+  user_handle = 'andrewbrown'  # Would be retrieved from auth
   amount = request.json['amount']
   description = request.json['description']
   group_id = request.json.get('group_id')
@@ -376,17 +368,19 @@ def data_create_expense():
     return model['errors'], 422
   else:
     return model['data'], 200
-  return
 
+# API Route to get details for a specific expense
 @app.route("/api/expenses/<string:expense_uuid>", methods=['GET'])
+@cross_origin()  # Added cross_origin decorator
 def data_show_expense(expense_uuid):
   data = ShowExpense.run(expense_uuid=expense_uuid)
   return data, 200
 
+# API Route to create a payment between users
 @app.route("/api/payments", methods=['POST','OPTIONS'])
 @cross_origin()
 def data_create_payment():
-  user_handle = 'andrewbrown'  # This would be retrieved from auth
+  user_handle = 'andrewbrown'  # Would be retrieved from auth
   recipient_handle = request.json['recipient_handle']
   amount = request.json['amount']
   note = request.json.get('note', '')
@@ -402,9 +396,10 @@ def data_create_payment():
     return model['errors'], 422
   else:
     return model['data'], 200
-  return
 
+# API Route for user profile activities
 @app.route("/api/user/@<string:handle>", methods=['GET'])
+@cross_origin()  # Added cross_origin decorator
 def data_handle(handle):
   model = UserActivities.run(handle)
   if model['errors'] is not None:

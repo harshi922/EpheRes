@@ -388,155 +388,143 @@
 // }
 
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, UserCircle, Filter } from 'lucide-react';
-import { HomepageBalanceCard } from './BalanceCard';
-import ExpenseForm from './ExpenseForm';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import './HomeFeedPage.css';
 
-const HomePage = ({ currentUser, expenses, onAddExpense }) => {
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [recentExpenses, setRecentExpenses] = useState([]);
-  const [totalOwed, setTotalOwed] = useState(0);
-  const [totalOwe, setTotalOwe] = useState(0);
-  
-  // Calculate balances and filter recent expenses on load
-  useEffect(() => {
-    // Get 5 most recent expenses
-    setRecentExpenses(expenses.slice(0, 5));
-    
-    // Calculate total owed/owe from all expenses
-    let owed = 0;
-    let owe = 0;
-    
-    expenses.forEach(expense => {
-      if (expense.paidBy.id === currentUser.id) {
-        // You paid, so others owe you
-        const yourShare = expense.participants.find(p => p.id === currentUser.id)?.amount || 0;
-        owed += (expense.amount - yourShare);
-      } else {
-        // Someone else paid, you might owe them
-        const yourShare = expense.participants.find(p => p.id === currentUser.id)?.amount || 0;
-        owe += yourShare;
+import DesktopNavigation from '../components/DesktopNavigation';
+import ExpenseFeed from '../components/ExpenseFeed';
+import ExpenseForm from '../components/ExpenseForm';
+import Summary from '../components/Summary';
+
+export default function HomeFeedPage() {
+  const [expenses, setExpenses] = useState([]);
+  const [popped, setPopped] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const dataFetchedRef = React.useRef(false);
+
+  const checkAuth = async () => {
+    try {
+      const session = await fetchAuthSession();
+      
+      if (session && session.tokens && session.tokens.accessToken) {
+        localStorage.setItem("access_token", session.tokens.accessToken.toString());
       }
-    });
-    
-    setTotalOwed(owed);
-    setTotalOwe(owe);
-  }, [expenses, currentUser.id]);
-  
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Math.abs(amount));
+      
+      try {
+        const currentUser = await getCurrentUser();
+        
+        setUser({
+          id: currentUser.username, // Use username as ID
+          display_name: currentUser.signInDetails?.userAttributes?.name || currentUser.username,
+          handle: currentUser.signInDetails?.userAttributes?.preferred_username || currentUser.username
+        });
+        
+        return true;
+      } catch (error) {
+        console.log("Error getting current user:", error);
+        return false;
+      }
+    } catch (error) {
+      console.log("Auth error:", error);
+      return false;
+    }
   };
+
+  const loadExpenses = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Get the access token
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setError("Authentication required");
+        setIsLoading(false);
+        return;
+      }
+      
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/expenses/home`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (response.status === 200) {
+        const data = await response.json();
+        setExpenses(data);
+      } else if (response.status === 401) {
+        // Unauthorized - token may be invalid
+        setError("Session expired. Please sign in again.");
+        localStorage.removeItem('access_token');
+        setTimeout(() => {
+          window.location.href = "/signin";
+        }, 2000);
+      } else {
+        setError("Failed to load expenses");
+      }
+    } catch (err) {
+      console.log("Error loading expenses:", err);
+      setError("Connection error. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Auth and data loading
+  useEffect(() => {
+    if (dataFetchedRef.current) return;
+    dataFetchedRef.current = true;
+    
+    const initialize = async () => {
+      const isAuthenticated = await checkAuth();
+      
+      if (isAuthenticated) {
+        await loadExpenses();
+      } else {
+        // Redirect to sign in if not authenticated
+        window.location.href = "/signin";
+      }
+    };
+    
+    initialize();
+  }, []);
   
-  // Format date
-  const formatDate = (dateString) => {
-    const options = { month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+  // Handle search results
+  const handleSearchResults = (results) => {
+    if (results && Array.isArray(results)) {
+      setExpenses(results);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
-      {/* Header */}
-      <header className="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-10">
-        <div className="flex items-center">
-          <UserCircle className="w-8 h-8 text-gray-700 mr-2" />
-          <h1 className="text-xl font-semibold text-gray-800">Splitwise</h1>
-        </div>
-        <div className="flex">
-          <button className="p-2 text-gray-600">
-            <Search className="w-6 h-6" />
-          </button>
-          <button className="p-2 text-gray-600">
-            <Bell className="w-6 h-6" />
-          </button>
-        </div>
-      </header>
-      
-      {/* Main Content */}
-      <main className="p-4">
-        {/* Balance Card */}
-        <HomepageBalanceCard totalOwed={totalOwed} totalOwe={totalOwe} />
-        
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-800">Recent Activity</h2>
-            <button className="text-gray-600">
-              <Filter className="w-5 h-5" />
-            </button>
-          </div>
-          
-          {recentExpenses.length > 0 ? (
-            <div>
-              {recentExpenses.map(expense => {
-                const isPayer = expense.paidBy.id === currentUser.id;
-                const userShare = expense.participants.find(p => p.id === currentUser.id)?.amount || 0;
-                const balance = isPayer ? (expense.amount - userShare) : -userShare;
-                
-                return (
-                  <div key={expense.id} className="p-4 border-b flex items-start">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0 mr-3"></div>
-                    <div className="flex-grow">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="font-medium text-gray-800">{expense.description}</h3>
-                          <p className="text-sm text-gray-500">
-                            {isPayer ? 'You paid' : `${expense.paidBy.name} paid`}
-                            {expense.group && ` • ${expense.group.name}`}
-                          </p>
-                          <p className="text-xs text-gray-500">{formatDate(expense.date)}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-800">{formatCurrency(expense.amount)}</p>
-                          {balance !== 0 && (
-                            <p className={`text-sm ${balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {balance > 0 
-                                ? `you get back ${formatCurrency(balance)}` 
-                                : `you owe ${formatCurrency(-balance)}`}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-              
-              <div className="p-3 text-center">
-                <button className="text-green-600 font-medium">
-                  View All
-                </button>
-              </div>
+    <article>
+      <DesktopNavigation user={user} active={'home'} setPopped={setPopped} />
+      <div className='content'>
+        <ExpenseForm  
+          popped={popped}
+          setPopped={setPopped} 
+          setExpenses={setExpenses} 
+        />
+        <div className='expense_sections'>
+          <Summary user={user} />
+          {error ? (
+            <div className="bg-red-100 p-4 rounded-lg text-red-700 mb-4">
+              {error}
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">
-              <p>No expenses yet</p>
-              <p className="mt-2">Add your first expense to get started</p>
-            </div>
+            <ExpenseFeed 
+              title="Recent Activity" 
+              expenses={expenses}
+              currentUser={user}
+              isLoading={isLoading}
+              onRefresh={handleSearchResults}
+            />
           )}
         </div>
-      </main>
-      
-      {/* Expense Form Modal */}
-      {showExpenseForm && (
-        <div className="fixed inset-0 z-50">
-          <ExpenseForm 
-            onSubmit={data => {
-              onAddExpense(data);
-              setShowExpenseForm(false);
-            }}
-            onCancel={() => setShowExpenseForm(false)}
-            currentUser={currentUser}
-          />
-        </div>
-      )}
-    </div>
+      </div>
+    </article>
   );
-};
-
-export default HomePage;
+}

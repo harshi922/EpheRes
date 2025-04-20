@@ -22,6 +22,7 @@
 #       model['data'] = results
 #     return model
 
+# services/user_activities.py
 from datetime import datetime, timedelta, timezone
 
 class UserActivities:
