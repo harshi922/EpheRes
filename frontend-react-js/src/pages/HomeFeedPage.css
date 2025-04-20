@@ -13,7 +13,7 @@ article {
 .content {
   flex: 1;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: var(--color-gray-800);
   overflow-y: auto;
 }
 

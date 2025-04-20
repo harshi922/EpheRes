@@ -1,19 +1,21 @@
-import './ConfirmationPage.css';
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useLocation } from 'react-router-dom';
 import { ReactComponent as Logo } from '../components/svg/logo.svg';
 import { confirmSignUp, resendSignUpCode } from "aws-amplify/auth";
+import './ConfirmationPage.css';
 
 export default function ConfirmationPage() {
-  const [email, setEmail] = React.useState('');
-  const [username, setUsername] = React.useState('');
-  const [code, setCode] = React.useState('');
-  const [errors, setErrors] = React.useState('');
-  const [message, setMessage] = React.useState('');
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [code, setCode] = useState('');
+  const [errors, setErrors] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const params = useParams();
   const location = useLocation();
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Get username and email from URL params or localStorage
     const queryParams = new URLSearchParams(location.search);
     const urlUsername = queryParams.get('username');
@@ -40,68 +42,31 @@ export default function ConfirmationPage() {
     }
   }, [location]);
 
-  const code_onchange = (event) => {
-    setCode(event.target.value);
-  }
-  
-  const email_onchange = (event) => {
-    setEmail(event.target.value);
-  }
-
-  const username_onchange = (event) => {
-    setUsername(event.target.value);
-  }
-  
-  const resend_code = async () => {
-    setErrors('');
-    setMessage('');
-    
-    if (!username) {
-      setErrors('Username is required to resend the code');
-      return;
-    }
-    
-    try {
-      console.log('Resending code for username:', username);
-      
-      await resendSignUpCode({
-        username: username
-      });
-      
-      setMessage('Verification code has been sent to your email');
-    } catch (err) {
-      console.error('Error resending code:', err);
-      setErrors(err.message || 'An error occurred while resending the code');
-    }
-  }
-  
-  const onsubmit = async (event) => {
+  const handleConfirm = async (event) => {
     event.preventDefault();
-    console.log('ConfirmationPage.onsubmit');
     setErrors('');
     setMessage('');
+    setLoading(true);
     
     try {
       if (!username) {
         setErrors('Username is required');
-        return false;
+        setLoading(false);
+        return;
       }
       
       if (!code) {
         setErrors('Verification code is required');
-        return false;
+        setLoading(false);
+        return;
       }
-      
-      console.log('Confirming signup for username:', username, 'with code:', code);
       
       const { isSignUpComplete, nextStep } = await confirmSignUp({
         username: username,
         confirmationCode: code
       });
       
-      console.log('Confirmation result:', isSignUpComplete, nextStep);
-      
-      if (nextStep.signUpStep === 'COMPLETE_AUTO_SIGN_IN' || isSignUpComplete) {
+      if (nextStep.signUpStep === 'DONE' || isSignUpComplete) {
         setMessage('Account confirmed! Redirecting to sign in...');
         
         // Clear localStorage
@@ -114,79 +79,127 @@ export default function ConfirmationPage() {
         }, 2000);
       }
     } catch (err) {
-      console.error('Error confirming signup:', err);
       setErrors(err.message || 'An error occurred during confirmation');
+    } finally {
+      setLoading(false);
     }
-    
-    return false;
-  }
-
-  let el_errors;
-  if (errors) {
-    el_errors = <div className='errors'>{errors}</div>;
   }
   
-  let el_message;
-  if (message) {
-    el_message = <div className='success'>{message}</div>;
+  const handleResendCode = async () => {
+    setErrors('');
+    setMessage('');
+    setResending(true);
+    
+    if (!username) {
+      setErrors('Username is required to resend the code');
+      setResending(false);
+      return;
+    }
+    
+    try {
+      await resendSignUpCode({
+        username: username
+      });
+      
+      setMessage('Verification code has been sent to your email');
+    } catch (err) {
+      setErrors(err.message || 'An error occurred while resending the code');
+    } finally {
+      setResending(false);
+    }
   }
 
   return (
-    <article className="confirm-article">
-      <div className='confirm-info'>
-        <Logo className='logo' />
-      </div>
-      <div className='confirm-wrapper'>
-        <form
-          className='confirm_form'
-          onSubmit={onsubmit}
-        >
-          <h2>Confirm your Email</h2>
-          <div className='fields'>
-            <div className='field text_field username'>
-              <label>Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={username_onchange}
-                readOnly={!!username}
-              />
+    <div className="min-h-screen bg-gray-800 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="flex justify-center mb-8">
+          <Logo className="w-20 h-20 text-white opacity-80" />
+        </div>
+        
+        <div className="bg-gray-900 rounded-lg shadow-xl overflow-hidden">
+          <form onSubmit={handleConfirm} className="p-8">
+            <h2 className="text-2xl font-bold text-white text-center mb-6">Confirm Your Account</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-400 mb-1">
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  readOnly={!!username}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  readOnly={!!email}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="code" className="block text-sm font-medium text-gray-400 mb-1">
+                  Verification Code
+                </label>
+                <input
+                  id="code"
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Check your email for the code"
+                  required
+                />
+              </div>
             </div>
-            <div className='field text_field email'>
-              <label>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={email_onchange}
-                readOnly={!!email}
-              />
-            </div>
-            <div className='field text_field code'>
-              <label>Confirmation Code</label>
-              <input
-                type="text"
-                value={code}
-                onChange={code_onchange}
-                required
-              />
-            </div>
+            
+            {errors && (
+              <div className="mt-4 bg-red-900/50 text-red-200 px-4 py-3 rounded-lg text-sm">
+                {errors}
+              </div>
+            )}
+            
+            {message && (
+              <div className="mt-4 bg-green-900/50 text-green-200 px-4 py-3 rounded-lg text-sm">
+                {message}
+              </div>
+            )}
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full mt-6 py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {loading ? 'Confirming...' : 'Confirm Account'}
+            </button>
+          </form>
+          
+          <div className="py-4 px-8 bg-gray-800 text-gray-400 text-center">
+            <button
+              type="button"
+              onClick={handleResendCode}
+              disabled={resending}
+              className="text-green-400 hover:text-green-300 font-medium focus:outline-none"
+            >
+              {resending ? 'Sending...' : 'Resend verification code'}
+            </button>
           </div>
-          {el_errors}
-          {el_message}
-          <div className='submit'>
-            <button type='submit'>Confirm Email</button>
-          </div>
-        </form>
+        </div>
       </div>
-      <div className="resend-code">
-        <button 
-          onClick={resend_code} 
-          className="resend-button"
-          type="button"
-        >
-          Resend Activation Code
-        </button>
-      </div>
-    </article>
+    </div>
   );
 }
