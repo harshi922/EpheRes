@@ -194,20 +194,17 @@
 // // };
 
 // export default ExpenseFeed;
-import React, { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import React, { useState, onRefresh } from 'react';
+import { Search, Filter, Plus } from 'lucide-react';
 import ExpenseItem from './ExpenseItem';
-import ExpenseForm from './ExpenseForm';
 
-const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpense, isLoading, onRefresh }) => {
+const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpense, isLoading }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [popped, setPopped] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-    const [localExpenses, setLocalExpenses] = useState(expenses);
   const [error, setError] = useState(null);
   
   // Make sure expenses is an array
-  const safeExpenses = Array.isArray(localExpenses) ? localExpenses : [];
+  const safeExpenses = Array.isArray(expenses) ? expenses : [];
   
   // Handle expense search
   const handleSearch = async (e) => {
@@ -234,10 +231,9 @@ const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpe
       
       const data = await res.json();
       
-      if (res.status === 200 && data) {
+      if (res.status === 200) {
         // Update expenses list with search results
         if (onRefresh) {
-          // If there's a refresh handler, let the parent component handle it
           onRefresh(data);
         }
       } else {
@@ -249,16 +245,15 @@ const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpe
     }
   };
   
-  // Filter expenses if search term is present (client-side filtering)
-  const filteredExpenses = searchTerm && !onRefresh
+  // Filter expenses client-side if no search endpoint is available
+  const filteredExpenses = searchTerm
     ? safeExpenses.filter(exp => {
-        // Guard against undefined properties
-        const description = exp.description || exp.message || '';
-        const paidBy = exp.created_by || exp.display_name || '';
+        const description = exp.description || '';
+        const createdBy = exp.created_by || exp.paidBy?.name || '';
         
         return (
           description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          paidBy.toLowerCase().includes(searchTerm.toLowerCase())
+          createdBy.toLowerCase().includes(searchTerm.toLowerCase())
         );
       })
     : safeExpenses;
@@ -288,7 +283,7 @@ const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpe
                   placeholder="Search expenses"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-green-500"
                 />
                 <button type="submit" className="hidden">Search</button>
               </div>
@@ -302,7 +297,7 @@ const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpe
       <div className="flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-48 text-gray-500 bg-white p-8">
-            <div className="w-8 h-8 border-4 border-gray-300 border-t-purple-500 rounded-full animate-spin mr-2"></div>
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin mr-2"></div>
             <p>Loading expenses...</p>
           </div>
         ) : filteredExpenses.length > 0 ? (
@@ -324,65 +319,19 @@ const ExpenseFeed = ({ expenses = [], currentUser, title = "Expenses", onAddExpe
         )}
       </div>
       
+      {/* Add Expense Button */}
       {onAddExpense && (
-  <div className="p-4 sticky bottom-0">
-    <button 
-      onClick={() => setPopped(true)}  // 👈 open modal
-      className="w-full py-3 bg-green-500 text-white rounded-lg font-medium shadow-md"
-    >
-      + Add Expense
-    </button>
-  </div>
-)}
-{popped && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50 animate-fade-in">
-    <div className="relative bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-      
-      {/* Close Button */}
-      <button 
-        className="absolute top-3 right-3 text-gray-600 hover:text-red-500 text-xl font-bold"
-        onClick={() => setPopped(false)}
-        aria-label="Close"
-      >
-        ×
-      </button>
-
-      <ExpenseForm 
-        popped={popped}
-        setPopped={setPopped}
-        setExpenses={setLocalExpenses}
-      />
+        <div className="p-4 sticky bottom-0">
+          <button 
+            onClick={onAddExpense}
+            className="w-full py-3 bg-green-500 text-white rounded-lg font-medium shadow-md flex items-center justify-center"
+          >
+            <Plus className="mr-2" size={20} />
+            Add Expense
+          </button>
+        </div>
+      )}
     </div>
-  </div>
-)}
-
-{popped && (
-  <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in overflow-y-auto">
-    <div className="relative w-full sm:max-w-md bg-white sm:rounded-xl sm:my-10 p-4 sm:p-6 shadow-lg sm:mt-0 mt-0 min-h-screen sm:min-h-fit">
-
-      {/* Sticky Close Button for mobile */}
-      <div className="sticky top-0 bg-white z-10 flex justify-end p-2 sm:static sm:justify-end">
-        <button 
-          className="text-gray-600 hover:text-red-500 text-2xl font-bold"
-          onClick={() => setPopped(false)}
-          aria-label="Close"
-        >
-          ×
-        </button>
-      </div>
-
-      {/* Actual Form */}
-      <ExpenseForm 
-        popped={popped}
-        setPopped={setPopped}
-        setExpenses={setLocalExpenses}
-      />
-    </div>
-  </div>
-)}
-
-</div>
-
   );
 };
 

@@ -51,6 +51,20 @@ class UserActivities:
           {'handle': user_handle, 'amount': '600.00'},
           {'handle': 'Roommate', 'amount': '600.00'}
         ]
+      },
+      {'uuid': '2421wr3959df-3079-4947-b847-9e0892d1bab4',
+        'created_by': user_handle,
+        'display_name': user_handle,
+        'description': 'Monthly Rent',
+        'amount': '1200.00',
+        'category': 'Housing',
+        'group_name': 'Apartment',
+        'created_at': (now - timedelta(days=1)).isoformat(),
+        'split_type': 'equal',
+        'participants': [
+          {'handle': user_handle, 'amount': '600.00'},
+          {'handle': 'Roommate', 'amount': '600.00'}
+        ]
       }]
       model['data'] = results
     return model

@@ -1,12 +1,12 @@
-import { fetchAuthSession, getCurrentUser, signOut } from 'aws-amplify/auth';
-import './AccountPage.css';
 import React, { useState, useEffect } from "react";
+import { fetchAuthSession, getCurrentUser, signOut } from 'aws-amplify/auth';
+import { User, DollarSign, Settings, LogOut } from 'lucide-react';
 
+// Import components
 import NavigationBar from '../components/NavigationBar';
 import CategoryGraph from '../components/CategoryGraph';
-import Summary from '../components/Summary';
 
-export default function AccountPage() {
+const AccountPage = () => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [expenseStats, setExpenseStats] = useState(null);
@@ -24,12 +24,9 @@ export default function AccountPage() {
       
       try {
         const currentUser = await getCurrentUser();
-        console.log(currentUser)
-        console.log(currentUser.username)
-        console.log(currentUser.signInDetails?.loginId)
         setUser({
-          handle: currentUser.signInDetails?.username,
-          email: currentUser.signInDetails?.loginId
+          handle: currentUser.username,
+          email: currentUser.signInDetails?.loginId || currentUser.username
         });
         
         return true;
@@ -56,11 +53,11 @@ export default function AccountPage() {
         return;
       }
       
-      // // In a real app, this would fetch user profile data
-      // // and expense statistics from the backend
+      // In a real app, this would fetch user profile data
+      // and expense statistics from the backend
       
-      // // For now, simulate loading data
-      // await new Promise(resolve => setTimeout(resolve, 500));
+      // For now, simulate loading data
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Simulate user data
       setUserData({
@@ -148,7 +145,7 @@ export default function AccountPage() {
           </div>
         ) : isLoading ? (
           <div className="p-4 text-center">
-            <div className="w-8 h-8 border-4 border-gray-300 border-t-purple-500 rounded-full animate-spin mx-auto mb-2"></div>
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin mx-auto mb-2"></div>
             <p>Loading account data...</p>
           </div>
         ) : userData && (
@@ -156,9 +153,11 @@ export default function AccountPage() {
             {/* User Profile Card */}
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="w-16 h-16 bg-green-500 rounded-full flex-shrink-0 mr-4"></div>
+                <div className="w-16 h-16 bg-green-500 rounded-full flex-shrink-0 mr-4 flex items-center justify-center">
+                  <User size={32} className="text-white" />
+                </div>
                 <div>
-                  <p className="text-gray-600">@{userData.handle}</p>
+                  <h2 className="text-xl font-semibold text-gray-800">@{userData.handle}</h2>
                   <p className="text-gray-600">{userData.email}</p>
                   <p className="text-gray-500 text-sm">Member since: {new Date(userData.joinDate).toLocaleDateString()}</p>
                 </div>
@@ -166,19 +165,51 @@ export default function AccountPage() {
             </div>
             
             {/* Balance Summary */}
-            <Summary user={user} />
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <DollarSign size={20} className="mr-2" />
+                Your Balance
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">Total paid</p>
+                  <p className="text-xl font-semibold text-gray-800">
+                    ${expenseStats.totalPaid.toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">Total owed</p>
+                  <p className="text-xl font-semibold text-green-600">
+                    ${expenseStats.totalOwed.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <p className="text-gray-500">Net balance</p>
+                  <p className={`text-xl font-semibold ${
+                    expenseStats.netBalance > 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    ${expenseStats.netBalance.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
             
             {/* Expense Breakdown */}
             {expenseStats && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Expense Breakdown</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Expense Breakdown</h3>
                 <CategoryGraph expenseData={expenseStats.expensesByCategory} />
               </div>
             )}
             
             {/* Account Settings */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Account Settings</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <Settings size={20} className="mr-2" />
+                Account Settings
+              </h3>
               
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Default Currency</label>
@@ -195,8 +226,9 @@ export default function AccountPage() {
               
               <button 
                 onClick={handleSignOut}
-                className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center"
               >
+                <LogOut size={18} className="mr-2" />
                 Sign Out
               </button>
             </div>
@@ -205,7 +237,9 @@ export default function AccountPage() {
       </div>
       
       {/* Fixed Bottom Navigation */}
-      <NavigationBar />
+      <NavigationBar activeTab="account" />
     </div>
   );
-}
+};
+
+export default AccountPage;

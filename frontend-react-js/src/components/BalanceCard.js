@@ -32,64 +32,37 @@
 import React from 'react';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
-const BalanceCard = ({ totalOwed, totalOwe }) => {
-  // Calculate net balance
-  const netBalance = totalOwed - totalOwe;
-  const isPositive = netBalance > 0;
-  const isNegative = netBalance < 0;
-  const isZero = netBalance === 0;
+// Regular BalanceCard for friend items
+const BalanceCard = ({ balance = "0" }) => {
+  // Convert balance to number and determine status
+  const balanceNum = parseFloat(balance);
   
-  // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 2
     }).format(Math.abs(amount));
   };
+  
+  let statusText = '';
+  if (balanceNum < 0) {
+    statusText = 'you owe';
+  } else if (balanceNum > 0) {
+    statusText = 'owes you';
+  } else {
+    statusText = 'settled up';
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-      <div className="flex justify-between mb-4">
-        <div className="text-green-600">
-          <h3 className="text-sm font-medium">total owed to you</h3>
-          <p className="text-lg font-semibold">{formatCurrency(totalOwed)}</p>
-        </div>
-        <div className="text-red-600">
-          <h3 className="text-sm font-medium text-right">total you owe</h3>
-          <p className="text-lg font-semibold">{formatCurrency(totalOwe)}</p>
-        </div>
-      </div>
-      
-      <div className="border-t pt-3">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-medium text-gray-600">TOTAL BALANCE</h3>
-          <div className={`flex items-center ${
-            isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-600'
-          }`}>
-            {isPositive && <ArrowUp className="w-4 h-4 mr-1" />}
-            {isNegative && <ArrowDown className="w-4 h-4 mr-1" />}
-            <span className="text-lg font-bold">
-              {isZero ? 'Settled up' : formatCurrency(netBalance)}
-            </span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="mt-4 flex">
-        <button className="flex-1 bg-green-500 text-white py-2 rounded-l-md font-medium text-sm">
-          Settle Up
-        </button>
-        <button className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-r-md font-medium text-sm">
-          Remind
-        </button>
-      </div>
+    <div className={`inline-flex items-center ${balanceNum < 0 ? 'text-red-600' : balanceNum > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+      <span className='text-xs mr-1'>{statusText}</span>
+      <span className='font-semibold text-sm'>{formatCurrency(balanceNum)}</span>
     </div>
   );
 };
 
-// Component to display in the homepage
+// Homepage summary balance card with more details
 const HomepageBalanceCard = ({ totalOwed, totalOwe }) => {
   // Calculate net balance
   const netBalance = totalOwed - totalOwe;
@@ -126,9 +99,11 @@ const HomepageBalanceCard = ({ totalOwed, totalOwe }) => {
         <div className="mt-3 pt-3 border-t">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">total balance</div>
-            <div className={`text-lg font-bold ${
+            <div className={`text-lg font-bold flex items-center ${
               isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-600'
             }`}>
+              {isPositive && <ArrowUp className="w-4 h-4 mr-1" />}
+              {isNegative && <ArrowDown className="w-4 h-4 mr-1" />}
               {isZero ? 'Settled up' : formatCurrency(netBalance)}
             </div>
           </div>
@@ -144,4 +119,50 @@ const HomepageBalanceCard = ({ totalOwed, totalOwe }) => {
   );
 };
 
-export { BalanceCard, HomepageBalanceCard };
+// Also provide a SettleUpCard component for friends page
+const SettleUpCard = ({ friend, onSettleUp }) => {
+  // Convert balance to number
+  const balanceNum = parseFloat(friend.balance);
+  
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(Math.abs(amount));
+  };
+  
+  // Only show settle up if there's a balance to settle
+  if (balanceNum === 0) {
+    return (
+      <div className="bg-gray-100 text-gray-700 rounded-md py-2 px-4 text-center">
+        All settled up
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-3">
+          <div>
+            <span className="font-semibold">{friend.display_name}</span>
+            <div className={`text-sm ${balanceNum < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {balanceNum < 0 ? 'You owe' : 'Owes you'} {formatCurrency(balanceNum)}
+            </div>
+          </div>
+          <button
+            onClick={() => onSettleUp(friend)}
+            className={`px-4 py-2 rounded-md text-white font-medium ${
+              balanceNum < 0 ? 'bg-red-500' : 'bg-green-500'
+            }`}
+          >
+            {balanceNum < 0 ? 'Pay' : 'Request'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export { BalanceCard, HomepageBalanceCard, SettleUpCard };

@@ -1,12 +1,22 @@
-import './CategoryGraph.css';
 import React from 'react';
 
-export default function CategoryGraph(props) {
-  const totalAmount = props.expenseData.reduce((sum, item) => sum + item.amount, 0);
+const CategoryGraph = ({ expenseData }) => {
+  // Check if expense data exists and has items
+  if (!expenseData || !Array.isArray(expenseData) || expenseData.length === 0) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        No category data available
+      </div>
+    );
+  }
+  
+  // Calculate total amount for percentages
+  const totalAmount = expenseData.reduce((sum, item) => sum + item.amount, 0);
   
   // Sort categories by amount (highest first)
-  const sortedData = [...props.expenseData].sort((a, b) => b.amount - a.amount);
+  const sortedData = [...expenseData].sort((a, b) => b.amount - a.amount);
   
+  // Format functions
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -36,28 +46,37 @@ export default function CategoryGraph(props) {
   };
 
   return (
-    <div className='category_graph'>
-      <div className='graph_bars'>
-        {sortedData.map((item, index) => (
-          <div key={index} className='graph_bar_container'>
-            <div className='bar_label'>
-              <span className='category_name'>{item.category}</span>
-              <span className='category_amount'>{formatCurrency(item.amount)}</span>
-            </div>
-            <div className='bar_wrapper'>
-              <div 
-                className='bar' 
-                style={{ 
-                  width: `${(item.amount / totalAmount) * 100}%`,
-                  backgroundColor: getColor(item.category)
-                }}
-              >
-                <span className='percentage'>{formatPercentage(item.amount)}</span>
-              </div>
+    <div className="space-y-4">
+      {sortedData.map((item, index) => (
+        <div key={index} className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium text-gray-700">{item.category}</span>
+            <span className="text-gray-700">{formatCurrency(item.amount)}</span>
+          </div>
+          <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full flex items-center rounded-full transition-all duration-500"
+              style={{ 
+                width: `${(item.amount / totalAmount) * 100}%`,
+                backgroundColor: getColor(item.category)
+              }}
+            >
+              <span className="px-2 text-white text-xs font-medium">
+                {formatPercentage(item.amount)}
+              </span>
             </div>
           </div>
-        ))}
+        </div>
+      ))}
+      
+      <div className="pt-4 border-t mt-4">
+        <div className="flex justify-between">
+          <span className="font-medium text-gray-700">Total</span>
+          <span className="font-medium text-gray-700">{formatCurrency(totalAmount)}</span>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default CategoryGraph;

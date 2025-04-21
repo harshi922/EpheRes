@@ -59,12 +59,9 @@
 // export default NavigationBar;
 
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { signOut } from 'aws-amplify/auth';
-import { Home, Users, Grid, Activity, User, LogOut } from 'lucide-react';
+import { Home, Users, Grid, Activity, User, LogOut, Plus } from 'lucide-react';
 
-const NavigationBar = () => {
-  const location = useLocation();
+const NavigationBar = ({ onAddExpenseClick, activeTab = 'home' }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   
   const navItems = [
@@ -76,7 +73,6 @@ const NavigationBar = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut({ global: true });
       localStorage.removeItem("access_token");
       localStorage.removeItem("amplify_auth_is_signed_in");
       window.location.href = "/signin";
@@ -96,36 +92,67 @@ const NavigationBar = () => {
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || 
-                             (item.id === 'home' && location.pathname === '/');
+            const isActive = activeTab === item.id;
             
             return (
-              <NavLink
+              <a
                 key={item.id}
-                to={item.path}
-                className={({ isActive }) => `flex flex-col items-center justify-center w-full h-full ${
+                href={item.path}
+                className={`flex flex-col items-center justify-center w-full h-full ${
                   isActive ? 'text-green-500' : 'text-gray-500'
                 }`}
-                end={item.id === 'home'}
               >
-                {({ isActive }) => (
-                  <>
-                    <Icon size={24} className={isActive ? 'text-green-500' : 'text-gray-500'} />
-                    <span className="text-xs mt-1">{item.label}</span>
-                  </>
-                )}
-              </NavLink>
+                <Icon size={24} className={isActive ? 'text-green-500' : 'text-gray-500'} />
+                <span className="text-xs mt-1">{item.label}</span>
+              </a>
             );
           })}
           
-          <button
-            onClick={toggleProfileMenu}
-            className="flex flex-col items-center justify-center w-full h-full relative"
-            aria-label="Profile"
-          >
-            <User size={24} className="text-gray-500" />
-            <span className="text-xs mt-1 text-gray-500">Profile</span>
-          </button>
+          {/* {onAddExpenseClick && (
+            <button
+              onClick={onAddExpenseClick}
+              className="flex flex-col items-center justify-center w-full h-full"
+              aria-label="Add expense"
+            >
+              <div className="bg-green-500 rounded-full p-2">
+                <Plus size={20} className="text-white" />
+              </div>
+              <span className="text-xs mt-1 text-gray-500">Add</span>
+            </button>
+          )}
+          
+          {!onAddExpenseClick && (
+            <button
+              onClick={toggleProfileMenu}
+              className="flex flex-col items-center justify-center w-full h-full relative"
+              aria-label="Profile"
+            >
+              <User size={24} className="text-gray-500" />
+              <span className="text-xs mt-1 text-gray-500">Profile</span>
+            </button>
+          )} */}
+          {onAddExpenseClick && (
+                <button
+                  onClick={onAddExpenseClick}
+                  className="flex flex-col items-center justify-center w-full h-full"
+                  aria-label="Add expense"
+                >
+                  <div className="bg-green-500 rounded-full p-2">
+                    <Plus size={20} className="text-white" />
+                  </div>
+                  <span className="text-xs mt-1 text-gray-500">Add</span>
+                </button>
+              )}
+
+              <button
+                onClick={toggleProfileMenu}
+                className="flex flex-col items-center justify-center w-full h-full relative"
+                aria-label="Profile"
+              >
+                <User size={24} className="text-gray-500" />
+                <span className="text-xs mt-1 text-gray-500">Profile</span>
+              </button>
+
         </div>
       </div>
 
@@ -133,14 +160,14 @@ const NavigationBar = () => {
       {showProfileMenu && (
         <div className="fixed bottom-16 right-0 bg-white shadow-lg rounded-t-lg z-20 w-48 border border-gray-200">
           <div className="p-4">
-            <NavLink 
-              to="/account" 
+            <a 
+              href="/account" 
               className="flex items-center p-2 hover:bg-gray-100 rounded-lg"
               onClick={() => setShowProfileMenu(false)}
             >
               <User size={18} className="mr-2" />
               <span>Account</span>
-            </NavLink>
+            </a>
             <button 
               onClick={handleSignOut}
               className="flex items-center p-2 hover:bg-gray-100 rounded-lg w-full text-left text-red-500"

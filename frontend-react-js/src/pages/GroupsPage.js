@@ -1,106 +1,12 @@
-// import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
-// import './GroupsPage.css';
-// import React from "react";
-
-// import DesktopNavigation from '../components/DesktopNavigation';
-// import GroupsList from '../components/GroupsList';
-// import GroupForm from '../components/GroupForm';
-
-// export default function GroupsPage() {
-//   const [groups, setGroups] = React.useState([]);
-//   const [groupFormPopped, setGroupFormPopped] = React.useState(false);
-//   const [user, setUser] = React.useState(null);
-//   const dataFetchedRef = React.useRef(false);
-
-//   const checkAuth = async () => {
-//     try {
-//       const session = await fetchAuthSession();
-      
-//       if (session && session.tokens && session.tokens.accessToken) {
-//         localStorage.setItem("access_token", session.tokens.accessToken.toString());
-//       }
-      
-//       const currentUser = await getCurrentUser();
-      
-//       setUser({
-//         display_name: currentUser.signInDetails?.userAttributes?.name || currentUser.username,
-//         handle: currentUser.signInDetails?.userAttributes?.preferred_username || currentUser.username
-//       });
-      
-//       return session;
-//     } catch (error) {
-//       console.log("Error in checkAuth function:", error);
-//       return null;
-//     }
-//   };
-
-//   const loadGroups = async () => {
-//     try {
-//       const accessToken = localStorage.getItem("access_token");
-      
-//       if (!accessToken) {
-//         return;
-//       }
-      
-//       const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/expense_groups`, {
-//         method: "GET",
-//         headers: {
-//           Authorization: `Bearer ${accessToken}`,
-//         }
-//       });
-      
-//       if (res.status === 200) {
-//         const data = await res.json();
-//         setGroups(data);
-//       }
-//     } catch (err) {
-//       console.log("Error loading groups:", err);
-//     }
-//   };
-
-//   // Auth and data loading
-//   React.useEffect(() => {
-//     if (dataFetchedRef.current) return;
-//     dataFetchedRef.current = true;
-    
-//     checkAuth()
-//       .then((session) => {
-//         if (session && session.tokens) {
-//           loadGroups();
-//         }
-//       })
-//       .catch((err) => {
-//         console.log('Error during authentication check:', err);
-//       });
-//   }, []);
-
-//   return (
-//     <article>
-//       <DesktopNavigation user={user} active={'groups'} />
-//       <div className='content'>
-//         <GroupForm
-//           popped={groupFormPopped}
-//           setPopped={setGroupFormPopped}
-//           setGroups={setGroups}
-//         />
-//         <GroupsList
-//           title="Your Groups"
-//           groups={groups}
-//           setGroupFormPopped={setGroupFormPopped}
-//         />
-//       </div>
-//     </article>
-//   );
-// }
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
-import './GroupsPage.css';
 import React, { useState, useEffect } from "react";
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
+// Import components
 import NavigationBar from '../components/NavigationBar';
 import GroupsList from '../components/GroupsList';
 import GroupForm from '../components/GroupForm';
 
-export default function GroupsPage() {
+const GroupsPage = () => {
   const [groups, setGroups] = useState([]);
   const [groupFormPopped, setGroupFormPopped] = useState(false);
   const [user, setUser] = useState(null);
@@ -195,12 +101,19 @@ export default function GroupsPage() {
     initialize();
   }, []);
 
+  // Handle new group creation
+  const handleGroupCreated = (newGroup) => {
+    setGroups(currentGroups => [newGroup, ...currentGroups]);
+    loadGroups(); // Reload all groups to ensure we have the latest data
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
+      {/* Group Form Modal */}
       <GroupForm
         popped={groupFormPopped}
         setPopped={setGroupFormPopped}
-        setGroups={setGroups}
+        onSubmit={handleGroupCreated}
       />
       
       <div className="max-w-4xl mx-auto px-4 pt-6">
@@ -229,7 +142,9 @@ export default function GroupsPage() {
       </div>
       
       {/* Fixed Bottom Navigation */}
-      <NavigationBar />
+      <NavigationBar activeTab="groups" />
     </div>
   );
-}
+};
+
+export default GroupsPage;

@@ -1,8 +1,7 @@
-import './PaymentForm.css';
 import React, { useState, useEffect } from "react";
-import process from 'process';
+import { X } from 'lucide-react';
 
-export default function PaymentForm(props) {
+const PaymentForm = ({ popped, setPopped, recipient, onSubmit }) => {
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [errors, setErrors] = useState('');
@@ -10,16 +9,16 @@ export default function PaymentForm(props) {
 
   useEffect(() => {
     // Pre-fill recommended amount if recipient is provided and has a negative balance
-    if (props.popped && props.recipient && parseFloat(props.recipient.balance) < 0) {
-      setAmount(Math.abs(parseFloat(props.recipient.balance)).toFixed(2));
+    if (popped && recipient && parseFloat(recipient.balance) < 0) {
+      setAmount(Math.abs(parseFloat(recipient.balance)).toFixed(2));
     } else {
       setAmount('');
     }
     setNote('');
     setErrors('');
-  }, [props.popped, props.recipient]);
+  }, [popped, recipient]);
 
-  const onsubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setErrors('');
     setIsSubmitting(true);
@@ -32,7 +31,7 @@ export default function PaymentForm(props) {
         return;
       }
       
-      if (!props.recipient) {
+      if (!recipient) {
         setErrors('Recipient information is missing');
         setIsSubmitting(false);
         return;
@@ -55,7 +54,7 @@ export default function PaymentForm(props) {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          recipient_handle: props.recipient.handle,
+          recipient_handle: recipient.handle,
           amount: amount,
           note: note
         }),
@@ -67,11 +66,11 @@ export default function PaymentForm(props) {
         // Reset and close the form
         setAmount('');
         setNote('');
-        props.setPopped(false);
+        setPopped(false);
         
         // Execute any onSubmit callback
-        if (props.onSubmit) {
-          props.onSubmit();
+        if (onSubmit) {
+          onSubmit(data);
         }
       } else {
         // Handle backend errors
@@ -83,67 +82,95 @@ export default function PaymentForm(props) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  if (!popped || !recipient) {
+    return null;
   }
 
-  const amount_onchange = (event) => {
-    setAmount(event.target.value);
-  }
-
-  const note_onchange = (event) => {
-    setNote(event.target.value);
-  }
-
-  if (props.popped === true && props.recipient) {
-    const isNegativeBalance = parseFloat(props.recipient.balance) < 0;
-    const title = isNegativeBalance ? 
-      `Pay ${props.recipient.display_name}` : 
-      `Request payment from ${props.recipient.display_name}`;
-    
-    return (
-      <div className="payment_form_overlay">
-        <form 
-          className='payment_form'
-          onSubmit={onsubmit}
-        >
-          <h2>{title}</h2>
-          
-          <div className='field'>
-            <label>Amount</label>
-            <div className="amount_input">
-              <span className="currency">$</span>
+  const isNegativeBalance = parseFloat(recipient.balance) < 0;
+  const title = isNegativeBalance ? 
+    `Pay ${recipient.display_name}` : 
+    `Request payment from ${recipient.display_name}`;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+          <button 
+            onClick={() => setPopped(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="mb-6">
+            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+              Amount
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 sm:text-sm">$</span>
+              </div>
               <input
                 type="number"
                 step="0.01"
                 min="0.01"
+                id="amount"
+                className="focus:ring-green-500 focus:border-green-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md py-3"
                 placeholder="0.00"
                 value={amount}
-                onChange={amount_onchange}
+                onChange={(e) => setAmount(e.target.value)}
                 required
               />
             </div>
           </div>
           
-          <div className='field'>
-            <label>Note (optional)</label>
+          <div className="mb-6">
+            <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">
+              Note (optional)
+            </label>
             <input
               type="text"
+              id="note"
+              className="focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md py-3"
               placeholder="What's this payment for?"
               value={note}
-              onChange={note_onchange}
+              onChange={(e) => setNote(e.target.value)}
             />
           </div>
           
-          {errors && <div className='errors'>{errors}</div>}
+          {errors && (
+            <div className="mb-6 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+              {errors}
+            </div>
+          )}
           
-          <div className='submit'>
-            <button type='submit' disabled={isSubmitting}>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setPopped(false)}
+              className="flex-1 bg-gray-200 py-3 text-gray-800 rounded-md font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`flex-1 py-3 text-white font-medium rounded-md ${
+                isNegativeBalance ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
+              } ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
               {isSubmitting ? 'Processing...' : isNegativeBalance ? 'Pay' : 'Request'}
             </button>
-            <button type='button' onClick={() => props.setPopped(false)}>Cancel</button>
           </div>
         </form>
       </div>
-    );
-  }
-  return null;
-}
+    </div>
+  );
+};
+
+export default PaymentForm;

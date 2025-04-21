@@ -1,13 +1,13 @@
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
-import './FriendsPage.css';
 import React, { useState, useEffect } from "react";
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
+// Import components
 import NavigationBar from '../components/NavigationBar';
-import {BalanceCard} from '../components/BalanceCard';
 import ExpenseFeed from '../components/ExpenseFeed';
+import { BalanceCard } from '../components/BalanceCard';
 import PaymentForm from '../components/PaymentForm';
 
-export default function FriendsPage() {
+const FriendsPage = () => {
   const [expenses, setExpenses] = useState([]);
   const [friends, setFriends] = useState([]);
   const [paymentFormPopped, setPaymentFormPopped] = useState(false);
@@ -381,7 +381,9 @@ export default function FriendsPage() {
         )}
       </div>
       
-      <NavigationBar />
+      <NavigationBar activeTab="friends" />
     </div>
   );
-}
+};
+
+export default FriendsPage;

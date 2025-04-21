@@ -1,13 +1,12 @@
-
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
-import './ActivityPage.css';
 import React, { useState, useEffect } from "react";
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
+// Import components
 import NavigationBar from '../components/NavigationBar';
-import ExpenseFilter from '../components/ExpenseFilter';
 import ExpenseFeed from '../components/ExpenseFeed';
+import ExpenseFilter from '../components/ExpenseFilter';
 
-export default function ActivityPage() {
+const ActivityPage = () => {
   const [activities, setActivities] = useState([]);
   const [user, setUser] = useState(null);
   const [filterCriteria, setFilterCriteria] = useState({
@@ -75,6 +74,7 @@ export default function ActivityPage() {
       
       if (res.status === 200) {
         const data = await res.json();
+        console.log(data)
         
         // Apply filters in the frontend
         let filteredData = [...data];
@@ -189,7 +189,9 @@ export default function ActivityPage() {
       </div>
       
       {/* Fixed Bottom Navigation */}
-      <NavigationBar />
+      <NavigationBar activeTab="activity" />
     </div>
   );
-}
+};
+
+export default ActivityPage;
